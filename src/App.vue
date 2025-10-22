@@ -109,15 +109,25 @@
           </p>
         </div>
       </div>
+      
+      <!-- Timeline Visualizer -->
+      <div v-if="results" class="mt-8">
+        <TimelineVisualizer 
+          :pastStays="validPastStays"
+          :plannedTrip="plannedTripData"
+          :daysUsedInWindow="results.daysUsedOnEntry"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { calculateSchengenStatus, formatDate, type Stay, type CalculationResult } from './utils/schengen'
+import TimelineVisualizer from './components/TimelineVisualizer.vue'
 
 const pastEntries = ref<Stay[]>([
   { entry: null, exit: null },
@@ -151,4 +161,19 @@ const calculate = () => {
   
   results.value = calculateSchengenStatus(validStays, plannedEntry.value, plannedExit.value)
 }
+
+// Computed properties for timeline
+const validPastStays = computed(() => {
+  return pastEntries.value.filter(stay => stay.entry && stay.exit)
+})
+
+const plannedTripData = computed(() => {
+  if (plannedEntry.value && plannedExit.value) {
+    return {
+      entry: plannedEntry.value,
+      exit: plannedExit.value
+    }
+  }
+  return null
+})
 </script>
