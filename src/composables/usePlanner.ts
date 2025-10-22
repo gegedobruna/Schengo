@@ -1,80 +1,137 @@
 import { computed, ref } from 'vue'
-import { DateTime } from 'luxon'
 import { useTripsStore } from '../stores/trips'
-import { calculateSchengenStatus, isSchengenCountry } from '../lib/schengen'
-import type { Stay, SchengenStatus, PlannerMode } from '../types'
+import { planTrip, alreadyInside } from '../lib/schengen'
+import { getTodayISO } from '../utils/stays'
+import type { Stay, PlanResult, InsideResult, PlannerMode } from '../types'
 
 export function usePlanner() {
   const tripsStore = useTripsStore()
-  const mode = ref<PlannerMode>('plan')
-  const referenceDate = ref(DateTime.now())
+  const mode = ref<PlannerMode>(tripsStore.lastMode)
+  const referenceDate = ref(getTodayISO())
 
   const currentStays = computed(() => {
-    if (!tripsStore.currentTrip) return []
-    return tripsStore.currentTrip.stays
+    return tripsStore.currentStays
   })
 
-  const schengenStays = computed(() => {
-    return currentStays.value.filter(stay => isSchengenCountry(stay.country))
+  const planTripResult = computed(() => {
+    if (!currentStays.value.length) {
+      return {
+        usedOnEntry: 0,
+        remainingOnEntry: 90,
+        latestExit: referenceDate.value,
+        agingOut: [],
+        proposed: undefined
+      } as PlanResult
+    }
+    return planTrip(currentStays.value, referenceDate.value)
   })
 
-  const schengenStatus = computed((): SchengenStatus => {
-    return calculateSchengenStatus(schengenStays.value, referenceDate.value)
+  const insideResult = computed(() => {
+    if (!currentStays.value.length) {
+      return {
+        usedToday: 0,
+        daysLeft: 90,
+        latestExit: getTodayISO()
+      } as InsideResult
+    }
+    return alreadyInside(currentStays.value, referenceDate.value)
   })
 
   const canAddStay = computed(() => {
-    return schengenStatus.value.isCompliant
+    if (mode.value === 'plan') {
+      return planTripResult.value.remainingOnEntry > 0
+    } else {
+      return insideResult.value.daysLeft > 0
+    }
   })
 
-  const addStay = (stay: Omit<Stay, 'id'>) => {
+  const addStay = (stay: Stay) => {
     if (!tripsStore.currentTrip) return
     
-    const duration = stay.exitDate.diff(stay.entryDate, 'days').days + 1
-    const stayWithDuration = { ...stay, duration }
-    
-    tripsStore.addStay(tripsStore.currentTrip.id, stayWithDuration)
+    tripsStore.addStay(tripsStore.currentTrip.id, stay)
   }
 
-  const updateStay = (stayId: string, updates: Partial<Omit<Stay, 'id'>>) => {
+  const updateStay = (stayIndex: number, updates: Partial<Stay>) => {
     if (!tripsStore.currentTrip) return
     
-    if (updates.entryDate && updates.exitDate) {
-      const duration = updates.exitDate.diff(updates.entryDate, 'days').days + 1
-      updates.duration = duration
-    }
-    
-    tripsStore.updateStay(tripsStore.currentTrip.id, stayId, updates)
+    tripsStore.updateStay(tripsStore.currentTrip.id, stayIndex, updates)
   }
 
-  const removeStay = (stayId: string) => {
+  const removeStay = (stayIndex: number) => {
     if (!tripsStore.currentTrip) return
-    tripsStore.removeStay(tripsStore.currentTrip.id, stayId)
+    
+    tripsStore.removeStay(tripsStore.currentTrip.id, stayIndex)
+  }
+
+  const addEmptyStay = () => {
+    if (!tripsStore.currentTrip) return
+    
+    tripsStore.addEmptyStay(tripsStore.currentTrip.id)
+  }
+
+  const normalizeStays = () => {
+    if (!tripsStore.currentTrip) return
+    
+    tripsStore.normalizeStays(tripsStore.currentTrip.id)
   }
 
   const setMode = (newMode: PlannerMode) => {
     mode.value = newMode
+    tripsStore.setMode(newMode)
   }
 
-  const setReferenceDate = (date: DateTime) => {
+  const setReferenceDate = (date: string) => {
     referenceDate.value = date
   }
 
   const resetReferenceDate = () => {
-    referenceDate.value = DateTime.now()
+    referenceDate.value = getTodayISO()
+  }
+
+  const exportStays = (): string => {
+    if (!tripsStore.currentTrip) return ''
+    return tripsStore.exportJson(tripsStore.currentTrip.id)
+  }
+
+  const importStays = (json: string) => {
+    if (!tripsStore.currentTrip) return
+    tripsStore.importJson(tripsStore.currentTrip.id, json)
+  }
+
+  const importBulkText = (text: string) => {
+    if (!tripsStore.currentTrip) return
+    tripsStore.importBulkText(tripsStore.currentTrip.id, text)
+  }
+
+  const clearWarning = () => {
+    tripsStore.clearWarning()
+  }
+
+  // Create default trip if none exists
+  if (!tripsStore.currentTrip && tripsStore.trips.length === 0) {
+    const defaultTrip = tripsStore.createTrip('My Schengen Trip')
+    tripsStore.setCurrentTrip(defaultTrip.id)
   }
 
   return {
     mode,
     referenceDate,
     currentStays,
-    schengenStays,
-    schengenStatus,
+    planTripResult,
+    insideResult,
     canAddStay,
+    warning: computed(() => tripsStore.warning),
     addStay,
     updateStay,
     removeStay,
+    addEmptyStay,
+    normalizeStays,
     setMode,
     setReferenceDate,
-    resetReferenceDate
+    resetReferenceDate,
+    exportStays,
+    importStays,
+    importBulkText,
+    clearWarning
   }
 }

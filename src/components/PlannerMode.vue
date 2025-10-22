@@ -1,133 +1,228 @@
 <template>
   <div class="space-y-6">
-    <!-- Status Overview -->
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="text-center">
-        <div class="text-3xl font-bold text-primary-600 mb-2">
-          {{ schengenStatus.daysUsed }}
-        </div>
-        <div class="text-sm text-gray-600">Days Used</div>
+    <!-- Input Section -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Plan Your Trip</h2>
       </div>
-      <div class="text-center">
-        <div class="text-3xl font-bold text-schengen-600 mb-2">
-          {{ schengenStatus.daysRemaining }}
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="label">Planned Entry Date *</label>
+          <input 
+            type="text" 
+            v-model="plannedEntry"
+            placeholder="YYYY-MM-DD (e.g., 2024-06-15)"
+            class="input"
+            :class="{ 'input-error': !plannedEntry || !isValidDate(plannedEntry) }"
+            required
+          />
+          <p v-if="!plannedEntry" class="error-message">Entry date is required</p>
+          <p v-else-if="!isValidDate(plannedEntry)" class="error-message">Please enter a valid date in YYYY-MM-DD format</p>
         </div>
-        <div class="text-sm text-gray-600">Days Remaining</div>
+        
+        <div>
+          <label class="label">Proposed Exit Date (Optional)</label>
+          <input 
+            type="text" 
+            v-model="proposedExit"
+            placeholder="YYYY-MM-DD (e.g., 2024-06-25)"
+            class="input"
+            :class="{ 'input-error': proposedExit && !isValidDate(proposedExit) }"
+          />
+          <p v-if="proposedExit && !isValidDate(proposedExit)" class="error-message">Please enter a valid date in YYYY-MM-DD format</p>
+        </div>
       </div>
-      <div class="text-center">
-        <div class="text-3xl font-bold mb-2" :class="schengenStatus.isCompliant ? 'text-green-600' : 'text-red-600'">
-          {{ schengenStatus.isCompliant ? '✓' : '✗' }}
-        </div>
-        <div class="text-sm text-gray-600">Compliant</div>
+      
+      <div class="mt-4">
+        <button 
+          @click="calculatePlanResult"
+          class="btn btn-primary"
+          :disabled="!plannedEntry || !isValidDate(plannedEntry)"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          Calculate Results
+        </button>
+        <p class="text-sm text-gray-600 mt-2">
+          Click "Calculate Results" to see your planning data
+        </p>
       </div>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="space-y-2">
-      <div class="flex justify-between text-sm text-gray-600">
-        <span>Days used in 180-day window</span>
-        <span>{{ schengenStatus.daysUsed }}/90</span>
+    <!-- Results Section -->
+    <div v-if="plannedEntry && planResult.usedOnEntry > 0" class="card">
+      <div class="card-header">
+        <h2 class="card-title">Planning Results</h2>
       </div>
-      <div class="w-full bg-gray-200 rounded-full h-3">
-        <div 
-          class="h-3 rounded-full transition-all duration-300"
-          :class="progressBarClass"
-          :style="{ width: `${Math.min((schengenStatus.daysUsed / 90) * 100, 100)}%` }"
-        ></div>
+      
+      <div class="grid md:grid-cols-3 gap-6 mb-6">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-primary-600 mb-2">
+            {{ planResult.usedOnEntry }}
+          </div>
+          <div class="text-sm text-gray-600">Used on Entry</div>
+        </div>
+        
+        <div class="text-center">
+          <div class="text-3xl font-bold text-schengen-600 mb-2">
+            {{ planResult.remainingOnEntry }}
+          </div>
+          <div class="text-sm text-gray-600">Remaining on Entry</div>
+        </div>
+        
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-600 mb-2">
+            {{ formatDate(planResult.latestExit) }}
+          </div>
+          <div class="text-sm text-gray-600">Latest Safe Exit</div>
+        </div>
+      </div>
+
+      <!-- Proposed Exit Validation -->
+      <div v-if="proposedExit" class="mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <svg 
+            class="w-5 h-5" 
+            :class="planResult.proposed?.ok ? 'text-green-500' : 'text-red-500'"
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path 
+              v-if="planResult.proposed?.ok"
+              fill-rule="evenodd" 
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
+              clip-rule="evenodd" 
+            />
+            <path 
+              v-else
+              fill-rule="evenodd" 
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" 
+              clip-rule="evenodd" 
+            />
+          </svg>
+          <span 
+            class="font-medium"
+            :class="planResult.proposed?.ok ? 'text-green-700' : 'text-red-700'"
+          >
+            {{ planResult.proposed?.ok ? 'OK - Trip is legal' : 'Exceeds 90 days' }}
+          </span>
+        </div>
+        
+        <p v-if="planResult.proposed?.firstIllegal" class="text-sm text-red-600">
+          First illegal day: {{ formatDate(planResult.proposed.firstIllegal) }}
+        </p>
+      </div>
+
+      <!-- Aging Out Schedule -->
+      <div v-if="planResult.agingOut.length > 0">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Aging Out Schedule</h3>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-sm text-gray-600 mb-3">
+            Days that will drop out of your 180-day window:
+          </div>
+          <div class="space-y-2">
+            <div 
+              v-for="(event, index) in planResult.agingOut.slice(0, 10)" 
+              :key="index"
+              class="flex justify-between items-center py-1"
+            >
+              <span class="text-sm">{{ formatDate(event.date) }}</span>
+              <span class="badge badge-info">+{{ event.days }} days regained</span>
+            </div>
+          </div>
+          <div v-if="planResult.agingOut.length > 10" class="text-sm text-gray-500 mt-2">
+            ... and {{ planResult.agingOut.length - 10 }} more events
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Warnings -->
-    <div v-if="schengenStatus.warnings.length > 0" class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+    <!-- Timeline -->
+    <div v-if="plannedEntry && planResult.usedOnEntry > 0" class="card">
+      <WindowTimeline 
+        :stays="currentStays"
+        :refDate="plannedEntry"
+        :proposed="proposedExit ? { entry: plannedEntry, exit: proposedExit } : undefined"
+      />
+    </div>
+
+    <!-- Info Note -->
+    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
       <div class="flex">
-        <svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        <svg class="w-5 h-5 text-blue-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
         </svg>
         <div>
-          <h3 class="text-sm font-medium text-yellow-800">Warnings</h3>
-          <ul class="mt-1 text-sm text-yellow-700 list-disc list-inside">
-            <li v-for="warning in schengenStatus.warnings" :key="warning">{{ warning }}</li>
+          <h3 class="text-sm font-medium text-blue-800">Important Notes</h3>
+          <ul class="mt-1 text-sm text-blue-700 list-disc list-inside space-y-1">
+            <li>Entry and exit days count in full (inclusive counting)</li>
+            <li>All calculations use UTC timezone</li>
+            <li>The 180-day window is rolling - it moves forward each day</li>
+            <li>You can stay up to 90 days in any 180-day period</li>
           </ul>
         </div>
       </div>
-    </div>
-
-    <!-- Add Stay Form -->
-    <div class="border-t pt-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Stay</h3>
-      <StayEditor @save="handleAddStay" :disabled="!canAddStay" />
-    </div>
-
-    <!-- Stays List -->
-    <div v-if="currentStays.length > 0" class="border-t pt-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Stays</h3>
-      <div class="space-y-3">
-        <div v-for="stay in currentStays" :key="stay.id" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div class="flex-1">
-            <div class="flex items-center mb-2">
-              <h4 class="font-medium text-gray-900">{{ stay.country }}</h4>
-              <span class="ml-2 badge badge-info">{{ stay.duration }} days</span>
-            </div>
-            <div class="text-sm text-gray-600">
-              {{ formatDateRange(stay.entryDate, stay.exitDate) }}
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button 
-              @click="handleEditStay(stay)"
-              class="btn btn-sm btn-secondary"
-            >
-              Edit
-            </button>
-            <button 
-              @click="handleRemoveStay(stay.id)"
-              class="btn btn-sm btn-danger"
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div v-else class="text-center py-12">
-      <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <p class="text-gray-500">No stays recorded yet. Add your first stay above.</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { usePlanner } from '../composables/usePlanner'
-import { formatDateRange } from '../utils/stays'
-import StayEditor from './StayEditor.vue'
-import type { Stay } from '../types'
+import { planTrip } from '../lib/schengen'
+import { formatDate } from '../utils/stays'
+import WindowTimeline from './WindowTimeline.vue'
+import type { PlanResult } from '../types'
 
-const { currentStays, schengenStatus, canAddStay, addStay, removeStay } = usePlanner()
+const { currentStays } = usePlanner()
 
-const progressBarClass = computed(() => {
-  const percentage = (schengenStatus.value.daysUsed / 90) * 100
-  if (percentage >= 90) return 'bg-red-500'
-  if (percentage >= 80) return 'bg-yellow-500'
-  return 'bg-green-500'
+const plannedEntry = ref('')
+const proposedExit = ref('')
+
+const isValidDate = (dateString: string): boolean => {
+  if (!dateString) return false
+  const regex = /^\d{4}-\d{2}-\d{2}$/
+  if (!regex.test(dateString)) return false
+  
+  const date = new Date(dateString)
+  return date instanceof Date && !isNaN(date.getTime()) && dateString === date.toISOString().split('T')[0]
+}
+
+const planResult = ref<PlanResult>({
+  usedOnEntry: 0,
+  remainingOnEntry: 90,
+  latestExit: '',
+  agingOut: [],
+  proposed: undefined
 })
 
-const handleAddStay = (stay: Omit<Stay, 'id'>) => {
-  addStay(stay)
-}
-
-const handleEditStay = (stay: Stay) => {
-  // TODO: Implement edit functionality
-  console.log('Edit stay:', stay)
-}
-
-const handleRemoveStay = (stayId: string) => {
-  if (confirm('Are you sure you want to remove this stay?')) {
-    removeStay(stayId)
+const calculatePlanResult = () => {
+  if (!plannedEntry.value || !isValidDate(plannedEntry.value)) {
+    planResult.value = {
+      usedOnEntry: 0,
+      remainingOnEntry: 90,
+      latestExit: '',
+      agingOut: [],
+      proposed: undefined
+    }
+    return
+  }
+  
+  try {
+    planResult.value = planTrip(currentStays.value, plannedEntry.value, proposedExit.value || undefined)
+  } catch (error) {
+    console.error('Error calculating plan result:', error)
+    planResult.value = {
+      usedOnEntry: 0,
+      remainingOnEntry: 90,
+      latestExit: plannedEntry.value,
+      agingOut: [],
+      proposed: undefined
+    }
   }
 }
+
+// No automatic calculations - only when user clicks Calculate button
 </script>

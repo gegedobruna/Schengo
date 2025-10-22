@@ -1,229 +1,276 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-6">
-    <div class="grid md:grid-cols-2 gap-6">
-      <!-- Country -->
-      <div>
-        <label class="label">Country</label>
-        <select 
-          v-model="form.country" 
-          class="input"
-          :class="{ 'input-error': errors.country }"
-          :disabled="disabled"
-        >
-          <option value="">Select a country</option>
-          <option v-for="country in schengenCountries" :key="country.code" :value="country.code">
-            {{ country.name }}
-          </option>
-        </select>
-        <p v-if="errors.country" class="error-message">{{ errors.country }}</p>
-      </div>
-
-      <!-- Duration (calculated automatically) -->
-      <div>
-        <label class="label">Duration</label>
-        <div class="input bg-gray-50" :class="{ 'input-error': errors.duration }">
-          {{ calculatedDuration }} days
+  <div class="space-y-6">
+    <!-- Stay Rows -->
+    <div class="space-y-4">
+      <div v-for="(stay, index) in stays" :key="index" class="flex items-end gap-4 p-4 border border-gray-200 rounded-lg">
+        <div class="flex-1">
+          <label class="label">Entry Date</label>
+          <input 
+            type="date" 
+            :value="stay.entry"
+            @input="updateStayEntry(index, ($event.target as HTMLInputElement).value)"
+            class="input"
+            :class="{ 'input-error': getStayErrors(index).entry }"
+            :disabled="disabled"
+          />
+          <p v-if="getStayErrors(index).entry" class="error-message">{{ getStayErrors(index).entry }}</p>
         </div>
-        <p v-if="errors.duration" class="error-message">{{ errors.duration }}</p>
+        
+        <div class="flex-1">
+          <label class="label">Exit Date</label>
+          <input 
+            type="date" 
+            :value="stay.exit"
+            @input="updateStayExit(index, ($event.target as HTMLInputElement).value)"
+            class="input"
+            :class="{ 'input-error': getStayErrors(index).exit }"
+            :disabled="disabled"
+          />
+          <p v-if="getStayErrors(index).exit" class="error-message">{{ getStayErrors(index).exit }}</p>
+        </div>
+        
+        <div class="flex-1">
+          <label class="label">Duration</label>
+          <div class="input bg-gray-50">
+            {{ calculateDuration(stay.entry, stay.exit) }} days
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <button 
+            @click="addStay"
+            class="btn btn-sm btn-primary"
+            :disabled="disabled"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add
+          </button>
+          <button 
+            @click="removeStay(index)"
+            class="btn btn-sm btn-danger"
+            :disabled="disabled || stays.length <= 1"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Remove
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-      <!-- Entry Date -->
-      <div>
-        <label class="label">Entry Date</label>
-        <input 
-          type="date" 
-          v-model="entryDateString"
-          class="input"
-          :class="{ 'input-error': errors.entryDate }"
-          :disabled="disabled"
-        />
-        <p v-if="errors.entryDate" class="error-message">{{ errors.entryDate }}</p>
-      </div>
-
-      <!-- Exit Date -->
-      <div>
-        <label class="label">Exit Date</label>
-        <input 
-          type="date" 
-          v-model="exitDateString"
-          class="input"
-          :class="{ 'input-error': errors.exitDate }"
-          :disabled="disabled"
-        />
-        <p v-if="errors.exitDate" class="error-message">{{ errors.exitDate }}</p>
-      </div>
-    </div>
-
-    <!-- Submit Button -->
-    <div class="flex justify-end space-x-4">
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-4">
       <button 
-        type="button" 
-        @click="handleReset"
+        @click="validateAndMerge"
+        class="btn btn-primary"
+        :disabled="disabled || stays.length === 0"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Validate & Merge
+      </button>
+      
+      <button 
+        @click="exportStays"
+        class="btn btn-secondary"
+        :disabled="disabled || stays.length === 0"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Export JSON
+      </button>
+      
+      <button 
+        @click="showImportModal = true"
         class="btn btn-secondary"
         :disabled="disabled"
       >
-        Reset
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+        </svg>
+        Import JSON
       </button>
+      
       <button 
-        type="submit" 
-        class="btn btn-primary"
-        :disabled="disabled || !isFormValid"
+        @click="showBulkModal = true"
+        class="btn btn-secondary"
+        :disabled="disabled"
       >
-        {{ isEditing ? 'Update Stay' : 'Add Stay' }}
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Bulk Import
       </button>
     </div>
-  </form>
+
+    <!-- Warning Message -->
+    <div v-if="warning" class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+      <div class="flex">
+        <svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-yellow-800">Warning</h3>
+          <p class="mt-1 text-sm text-yellow-700">{{ warning }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div v-if="showImportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Import JSON</h3>
+        <textarea 
+          v-model="importText"
+          class="input w-full h-32"
+          placeholder="Paste JSON data here..."
+        ></textarea>
+        <div class="flex justify-end gap-2 mt-4">
+          <button @click="showImportModal = false" class="btn btn-secondary">Cancel</button>
+          <button @click="importStays" class="btn btn-primary">Import</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Import Modal -->
+    <div v-if="showBulkModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Bulk Import</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          Enter dates in format: YYYY-MM-DD → YYYY-MM-DD (one per line)
+        </p>
+        <textarea 
+          v-model="bulkText"
+          class="input w-full h-40"
+          placeholder="2024-01-01 → 2024-01-10&#10;2024-02-01 → 2024-02-15&#10;..."
+        ></textarea>
+        <div class="flex justify-end gap-2 mt-4">
+          <button @click="showBulkModal = false" class="btn btn-secondary">Cancel</button>
+          <button @click="importBulk" class="btn btn-primary">Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { DateTime } from 'luxon'
-import { z } from 'zod'
+import { usePlanner } from '../composables/usePlanner'
+import { calculateStayDuration, validateStay } from '../utils/stays'
 import type { Stay } from '../types'
 
 interface Props {
-  stay?: Stay
   disabled?: boolean
 }
 
-interface Emits {
-  (e: 'save', stay: Omit<Stay, 'id'>): void
-  (e: 'cancel'): void
-}
+defineProps<Props>()
 
-const props = withDefaults(defineProps<Props>(), {
-  disabled: false
-})
+const { currentStays, normalizeStays, addStay: addStayToStore, removeStay: removeStayFromStore, exportStays: exportStaysFromStore, importStays: importStaysFromStore, importBulkText, warning } = usePlanner()
 
-const emit = defineEmits<Emits>()
+const stays = ref<Stay[]>([...currentStays.value])
+const showImportModal = ref(false)
+const showBulkModal = ref(false)
+const importText = ref('')
+const bulkText = ref('')
 
-// Form state
-const form = ref({
-  country: props.stay?.country || '',
-  entryDate: props.stay?.entryDate || DateTime.now(),
-  exitDate: props.stay?.exitDate || DateTime.now().plus({ days: 1 })
-})
-
-const errors = ref<Record<string, string>>({})
-
-// Computed properties
-const entryDateString = computed({
-  get: () => form.value.entryDate.toISODate() || '',
-  set: (value: string) => {
-    if (value) {
-      form.value.entryDate = DateTime.fromISO(value)
-    }
-  }
-})
-
-const exitDateString = computed({
-  get: () => form.value.exitDate.toISODate() || '',
-  set: (value: string) => {
-    if (value) {
-      form.value.exitDate = DateTime.fromISO(value)
-    }
-  }
-})
-
-const calculatedDuration = computed(() => {
-  if (!form.value.entryDate || !form.value.exitDate) return 0
-  return form.value.exitDate.diff(form.value.entryDate, 'days').days + 1
-})
-
-const isEditing = computed(() => !!props.stay)
-
-const isFormValid = computed(() => {
-  return form.value.country && 
-         form.value.entryDate && 
-         form.value.exitDate && 
-         form.value.entryDate < form.value.exitDate &&
-         Object.keys(errors.value).length === 0
-})
-
-// Schengen countries list
-const schengenCountries = [
-  { code: 'AT', name: 'Austria' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'CZ', name: 'Czech Republic' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'EE', name: 'Estonia' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'FR', name: 'France' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'GR', name: 'Greece' },
-  { code: 'HU', name: 'Hungary' },
-  { code: 'IS', name: 'Iceland' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'LV', name: 'Latvia' },
-  { code: 'LI', name: 'Liechtenstein' },
-  { code: 'LT', name: 'Lithuania' },
-  { code: 'LU', name: 'Luxembourg' },
-  { code: 'MT', name: 'Malta' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'SK', name: 'Slovakia' },
-  { code: 'SI', name: 'Slovenia' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'CH', name: 'Switzerland' }
-]
-
-// Validation schema
-const staySchema = z.object({
-  country: z.string().min(1, 'Please select a country'),
-  entryDate: z.any().refine(val => val instanceof DateTime, 'Invalid entry date'),
-  exitDate: z.any().refine(val => val instanceof DateTime, 'Invalid exit date')
-}).refine(data => data.entryDate < data.exitDate, {
-  message: 'Entry date must be before exit date',
-  path: ['exitDate']
-})
-
-// Watch for changes and validate
-watch([() => form.value.country, () => form.value.entryDate, () => form.value.exitDate], () => {
-  validateForm()
+// Watch for changes in currentStays and update local stays
+watch(() => currentStays.value, (newStays) => {
+  stays.value = [...newStays]
 }, { deep: true })
 
-// Methods
-const validateForm = () => {
-  try {
-    staySchema.parse(form.value)
-    errors.value = {}
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const newErrors: Record<string, string> = {}
-      error.errors.forEach(err => {
-        if (err.path[0]) {
-          newErrors[err.path[0] as string] = err.message
-        }
-      })
-      errors.value = newErrors
-    }
+const calculateDuration = (entry: string, exit: string): number => {
+  return calculateStayDuration(entry, exit)
+}
+
+const getStayErrors = (index: number) => {
+  const stay = stays.value[index]
+  if (!stay) return { entry: '', exit: '' }
+  
+  const errors = validateStay(stay)
+  return {
+    entry: errors.find(e => e.includes('entry')) || '',
+    exit: errors.find(e => e.includes('exit')) || ''
   }
 }
 
-const handleSubmit = () => {
-  validateForm()
-  if (isFormValid.value) {
-    const stay: Omit<Stay, 'id'> = {
-      country: form.value.country,
-      entryDate: form.value.entryDate,
-      exitDate: form.value.exitDate,
-      duration: calculatedDuration.value
-    }
-    emit('save', stay)
+const updateStayEntry = (index: number, value: string) => {
+  if (stays.value[index]) {
+    stays.value[index].entry = value
   }
 }
 
-const handleReset = () => {
-  form.value = {
-    country: '',
-    entryDate: DateTime.now(),
-    exitDate: DateTime.now().plus({ days: 1 })
+const updateStayExit = (index: number, value: string) => {
+  if (stays.value[index]) {
+    stays.value[index].exit = value
   }
-  errors.value = {}
+}
+
+const addStay = () => {
+  const today = DateTime.now().toUTC().toISODate()!
+  const tomorrow = DateTime.now().toUTC().plus({ days: 1 }).toISODate()!
+  stays.value.push({ entry: today, exit: tomorrow })
+}
+
+const removeStay = (index: number) => {
+  if (stays.value.length > 1) {
+    stays.value.splice(index, 1)
+  }
+}
+
+const validateAndMerge = () => {
+  // Clear current stays and add all local stays to the store
+  // First, clear the current trip's stays
+  if (currentStays.value.length > 0) {
+    // Remove all current stays
+    for (let i = currentStays.value.length - 1; i >= 0; i--) {
+      removeStayFromStore(i)
+    }
+  }
+  
+  // Add all local stays to the store
+  stays.value.forEach(stay => {
+    addStayToStore(stay)
+  })
+  
+  // Normalize stays in the store
+  normalizeStays()
+  
+  // Update local stays with normalized result
+  stays.value = [...currentStays.value]
+}
+
+const exportStays = () => {
+  const json = exportStaysFromStore()
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'schengen-stays.json'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+const importStays = () => {
+  if (importText.value.trim()) {
+    importStaysFromStore(importText.value)
+    stays.value = [...currentStays.value]
+    showImportModal.value = false
+    importText.value = ''
+  }
+}
+
+const importBulk = () => {
+  if (bulkText.value.trim()) {
+    importBulkText(bulkText.value)
+    stays.value = [...currentStays.value]
+    showBulkModal.value = false
+    bulkText.value = ''
+  }
 }
 </script>
