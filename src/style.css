@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Error border for date pickers */
 .error-border {
   border: 2px solid #ef4444 !important;
   border-radius: 8px;
@@ -246,13 +245,11 @@
     box-sizing: border-box;
   }
   
-  /* Ensure error messages don't expand cards */
   .card .text-red-500 {
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
   
-  /* Ensure date picker inputs maintain consistent width */
   .card .dp__input_wrap {
     width: 100%;
     min-width: 200px;
@@ -325,12 +322,6 @@
   }
 }
 
-/* ============================================
-   DATEPICKER CSS - COMMENTED OUT FOR TESTING
-   ============================================ */
-
-/* Date Picker Z-Index Fix - Must be at body level, not scoped */
-/* Target all possible date picker menu classes - ensure high z-index regardless of position */
 /*
 .dp__menu,
 .dp__calendar_wrap,
@@ -345,8 +336,6 @@
   isolation: auto !important;
 }
 
-/* MONTH/YEAR DROPDOWN FIX - Make it work properly with solid background */
-/* Target the dropdown list container - it's usually a direct child div */
 .dp__month_year_select_year > div:not([role]),
 .dp__month_year_select_month > div:not([role]),
 .dp__month_year_select_year ul,
@@ -363,7 +352,6 @@
   opacity: 1 !important;
 }
 
-/* Add a backdrop overlay when dropdown is open */
 .dp__menu:has(.dp__month_year_select_year[aria-expanded="true"])::before,
 .dp__menu:has(.dp__month_year_select_month[aria-expanded="true"])::before {
   content: '';
@@ -378,7 +366,6 @@
   border-radius: 12px;
 }
 
-/* When dropdown is expanded, disable and dim calendar */
 .dp__month_year_select_year[aria-expanded="true"] ~ .dp__calendar,
 .dp__month_year_select_month[aria-expanded="true"] ~ .dp__calendar,
 .dp__menu:has(.dp__month_year_select_year[aria-expanded="true"]) .dp__calendar,
@@ -394,7 +381,6 @@
   pointer-events: none !important;
 }
 
-/* Ensure dropdown items are visible and clickable */
 .dp__month_year_select_year[aria-expanded="true"] li,
 .dp__month_year_select_month[aria-expanded="true"] li,
 .dp__month_year_select_year[aria-expanded="true"] button,
@@ -404,13 +390,11 @@
   background: transparent !important;
 }
 
-/* Also target any nested menu containers */
 .dp__outer_menu .dp__menu,
 .dp__outer_menu .dp__calendar_wrap {
   z-index: 10001 !important;
 }
 
-/* Ensure date picker works whether positioned above or below */
 .dp__menu[style*="bottom"],
 .dp__menu[style*="top"] {
   z-index: 10000 !important;
@@ -437,13 +421,11 @@
   transform: scale(1.05) !important;
 }
 
-/* Ensure date picker input wrapper doesn't create stacking context issues */
 .dp__input_wrap {
   position: relative;
   z-index: 1;
 }
 
-/* Ensure date picker portal/teleport container has proper z-index when rendered at body level */
 body > .dp__menu,
 body > .dp__outer_menu,
 body > [class*="dp__menu"],
@@ -452,14 +434,6 @@ body > [class*="dp__menu"],
   z-index: 10000 !important;
 }
 
-/* Global fix: Ensure date picker always appears above everything */
-/* This targets the date picker regardless of where it's positioned in the DOM */
-/* Global styles handled by Tailwind */
-
-/* Specifically ensure cards and glass effects don't create stacking contexts that trap date picker */
-/* Card and glass-effect styles handled by component classes */
-
-/* Additional fix: Target date picker when it's inside any container */
 .card .dp__menu,
 .glass-effect .dp__menu,
 .card .dp__outer_menu,

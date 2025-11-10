@@ -114,7 +114,6 @@ export const translations = {
 export function useTranslations() {
   const language = ref<Language>('en')
   
-  // Load from localStorage
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('schengo-language')
     if (saved === 'sq' || saved === 'en') {

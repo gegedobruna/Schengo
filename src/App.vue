@@ -373,16 +373,13 @@ import { useTranslations } from './utils/translations'
 
 const { language, t, setLanguage } = useTranslations()
 
-// Computed locale for date picker
 const datePickerLocale = computed(() => {
   return language.value === 'sq' ? sqLocale : enUS
 })
 const mode = ref<'planning' | 'inside'>('planning')
 
-// Welcome screen state
 const showWelcome = ref(false)
 
-// Check if welcome was dismissed before
 if (typeof window !== 'undefined') {
   const welcomeDismissed = localStorage.getItem('schengo-welcome-dismissed')
   showWelcome.value = welcomeDismissed !== 'true'
@@ -395,7 +392,6 @@ const dismissWelcome = () => {
   }
 }
 
-// Planning mode state
 const pastEntries = ref<Stay[]>([
   { entry: null, exit: null }
 ])
@@ -404,7 +400,6 @@ const plannedEntry = ref<Date | null>(null)
 const plannedExit = ref<Date | null>(null)
 const results = ref<CalculationResult | null>(null)
 
-// Inside mode state
 const insidePastEntries = ref<Stay[]>([
   { entry: null, exit: null }
 ])
@@ -436,30 +431,25 @@ const removeInsideEntry = (index: number) => {
   }
 }
 
-// Validation functions
 const validatePastEntry = (stay: Stay): string[] => {
   const errors: string[] = []
   const today = new Date()
-  today.setHours(23, 59, 59, 999) // End of today
+  today.setHours(23, 59, 59, 999)
   
-  // If one date is provided, the other must be provided
   if ((stay.entry && !stay.exit) || (!stay.entry && stay.exit)) {
     errors.push(t('bothDatesRequired'))
     return errors
   }
   
   if (stay.entry && stay.exit) {
-    // Entry date cannot be after exit date
     if (stay.entry > stay.exit) {
       errors.push(t('entryAfterExit'))
     }
     
-    // Past entry date cannot be in the future
     if (stay.entry > today) {
       errors.push(t('pastEntryFuture'))
     }
     
-    // Past exit date cannot be in the future
     if (stay.exit > today) {
       errors.push(t('pastExitFuture'))
     }
@@ -480,12 +470,10 @@ const validatePlannedTrip = (): string[] => {
     return errors
   }
   
-  // Planned entry cannot be more than 2 years in the past
   if (plannedEntry.value < twoYearsAgo) {
     errors.push(t('plannedEntryTooPast'))
   }
   
-  // If exit date is provided, it must be after entry date
   if (plannedExit.value && plannedEntry.value > plannedExit.value) {
     errors.push(t('entryAfterExit'))
   }
@@ -505,12 +493,10 @@ const validateLastEntry = (): string[] => {
     return errors
   }
   
-  // Last entry cannot be in the future
   if (lastEntryDate.value > today) {
     errors.push(t('lastEntryFuture'))
   }
   
-  // Last entry cannot be more than 10 years in the past
   if (lastEntryDate.value < tenYearsAgo) {
     errors.push(t('lastEntryTooPast'))
   }
@@ -518,16 +504,13 @@ const validateLastEntry = (): string[] => {
   return errors
 }
 
-// Error state tracking
 const pastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({})
 const plannedTripErrors = ref<{ entry?: string, exit?: string }>({})
 const lastEntryErrors = ref<string>('')
 
-// Validation watchers - only validate when both dates are present or on calculate
 const validateAllPastEntries = (force = false) => {
   const newErrors: Record<number, { entry?: string, exit?: string }> = {}
   pastEntries.value.forEach((stay, index) => {
-    // Only validate if both dates are filled OR if forced (on calculate)
     const hasBothDates = stay.entry && stay.exit
     
     if (force || hasBothDates) {
@@ -557,7 +540,6 @@ const validateLastEntryDate = () => {
 }
 
 const calculate = () => {
-  // Validate all past entries (force validation)
   validateAllPastEntries(true)
   const hasPastErrors = Object.keys(pastEntryErrors.value).length > 0
   if (hasPastErrors) {
@@ -566,20 +548,17 @@ const calculate = () => {
     return
   }
   
-  // Validate planned trip
   validatePlannedTripDates()
   if (plannedTripErrors.value.entry || plannedTripErrors.value.exit) {
     alert(plannedTripErrors.value.entry || plannedTripErrors.value.exit || t('pleaseEnterPlannedEntry'))
     return
   }
 
-  // Filter out completely empty rows - only include stays with both dates
   const validStays = pastEntries.value.filter((stay: Stay) => stay.entry !== null && stay.exit !== null) as Stay[]
 
   results.value = calculateSchengenStatus(validStays, plannedEntry.value, plannedExit.value)
 }
 
-// Computed properties for timeline
 const validPastStays = computed(() => {
   return pastEntries.value.filter((stay: Stay) => stay.entry !== null && stay.exit !== null)
 })
@@ -587,14 +566,12 @@ const validPastStays = computed(() => {
 const plannedTripData = computed(() => {
   if (plannedEntry.value) {
     if (plannedExit.value) {
-      // Exit date provided
       return {
         entry: plannedEntry.value,
         exit: plannedExit.value,
         hasExitDate: true
       }
     } else if (results.value) {
-      // No exit date, use latest safe exit
       return {
         entry: plannedEntry.value,
         exit: new Date(results.value.latestSafeExit),
@@ -605,13 +582,11 @@ const plannedTripData = computed(() => {
   return null
 })
 
-// Inside mode validation
 const insidePastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({})
 
 const validateAllInsidePastEntries = (force = false) => {
   const newErrors: Record<number, { entry?: string, exit?: string }> = {}
   insidePastEntries.value.forEach((stay, index) => {
-    // Only validate if both dates are filled OR if forced (on calculate)
     const hasBothDates = stay.entry && stay.exit
     
     if (force || hasBothDates) {
@@ -628,7 +603,6 @@ const validateAllInsidePastEntries = (force = false) => {
 }
 
 const calculateInside = () => {
-  // Validate all past entries (force validation)
   validateAllInsidePastEntries(true)
   const hasPastErrors = Object.keys(insidePastEntryErrors.value).length > 0
   if (hasPastErrors) {
@@ -637,32 +611,25 @@ const calculateInside = () => {
     return
   }
   
-  // Validate last entry date
   validateLastEntryDate()
   if (lastEntryErrors.value) {
     alert(lastEntryErrors.value)
     return
   }
 
-  // Filter out completely empty rows - only include stays with both dates
   const validStays = insidePastEntries.value.filter((stay: Stay) => stay.entry !== null && stay.exit !== null) as Stay[]
 
-  // Add current stay (from last entry date to today)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const normalizedLastEntry = new Date(lastEntryDate.value!)
   normalizedLastEntry.setHours(0, 0, 0, 0)
   
-  // Include current stay in calculation
   const staysWithCurrent = [
     ...validStays,
     { entry: normalizedLastEntry, exit: today }
   ]
   
-  // Calculate using today as reference (since they're already inside)
   const result = calculateSchengenStatus(staysWithCurrent, today, null)
-  
-  // Calculate latest safe exit based on last entry date (without current stay for exit calculation)
   const exitResult = calculateSchengenStatus(validStays, normalizedLastEntry, null)
   
   insideResults.value = {

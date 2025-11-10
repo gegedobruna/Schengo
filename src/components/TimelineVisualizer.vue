@@ -110,17 +110,14 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Calculate timeline range
 const timelineRange = computed(() => {
   const allDates: Date[] = []
   
-  // Add all past stay dates
   props.pastStays.forEach(stay => {
     if (stay.entry) allDates.push(stay.entry)
     if (stay.exit) allDates.push(stay.exit)
   })
   
-  // Add planned trip dates
   if (props.plannedTrip) {
     allDates.push(props.plannedTrip.entry)
     allDates.push(props.plannedTrip.exit)
@@ -137,7 +134,6 @@ const timelineRange = computed(() => {
   const start = new Date(Math.min(...allDates.map(d => d.getTime())))
   const end = new Date(Math.max(...allDates.map(d => d.getTime())))
   
-  // Add some padding
   start.setMonth(start.getMonth() - 1)
   end.setMonth(end.getMonth() + 1)
   
@@ -177,11 +173,10 @@ const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date; hasExitDate?: b
   const leftPercent = (stayStart / totalDays) * 100
   const widthPercent = (stayDuration / totalDays) * 100
   
-  // Use different color for estimated trips (no exit date provided)
-  let color = '#8B5CF6' // Default planned color
+  let color = '#8B5CF6'
   if (index === -1) {
     const hasExitDate = 'hasExitDate' in stay ? stay.hasExitDate !== false : true
-    color = hasExitDate ? '#8B5CF6' : '#F49E4C' // Sandy brown for estimated
+    color = hasExitDate ? '#8B5CF6' : '#F49E4C'
   } else {
     color = getStayColor(index)
   }
@@ -199,13 +194,11 @@ const getRollingWindowStyle = () => {
   const end = timelineRange.value.end
   const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
   
-  // Use planned trip entry date as reference, or today if no planned trip
   let referenceDate = new Date()
   if (props.plannedTrip) {
     referenceDate = props.plannedTrip.entry
   }
   
-  // Show rolling window: 179 days before reference date to reference date (180 days inclusive)
   const windowStartDate = new Date(referenceDate)
   windowStartDate.setDate(windowStartDate.getDate() - 179)
   

@@ -1,6 +1,3 @@
-// Schengen 90/180 day rule calculations
-// All dates are handled as Date objects and converted to ISO strings for calculations
-
 export interface Stay {
   entry: Date | null
   exit: Date | null
@@ -16,13 +13,10 @@ export interface CalculationResult {
   daysRemainingAfterTrip?: number
 }
 
-// Convert Date to ISO date string (YYYY-MM-DD)
 function toISODate(date: Date): string {
   return date.toISOString().split('T')[0]
 }
 
-
-// Get all days in a date range (inclusive)
 function getDaysInRange(start: Date, end: Date): Date[] {
   const days: Date[] = []
   const current = new Date(start)
@@ -35,19 +29,15 @@ function getDaysInRange(start: Date, end: Date): Date[] {
   return days
 }
 
-// Normalize date to start of day (midnight)
 function normalizeDate(date: Date): Date {
   const normalized = new Date(date)
   normalized.setHours(0, 0, 0, 0)
   return normalized
 }
 
-// Calculate days used in rolling 180-day window
 function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
-  // Merge overlapping stays first to avoid double-counting
   const mergedStays = mergeStays(stays)
   
-  // Normalize reference date to start of day
   const refDate = normalizeDate(referenceDate)
   const windowStart = new Date(refDate)
   windowStart.setDate(windowStart.getDate() - 179) // 180 days inclusive
@@ -58,11 +48,9 @@ function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
   for (const stay of mergedStays) {
     if (!stay.entry || !stay.exit) continue
     
-    // Normalize stay dates
     const stayEntry = normalizeDate(stay.entry)
     const stayExit = normalizeDate(stay.exit)
     
-    // Only count stays that overlap with the rolling window
     const stayStart = stayEntry > windowStart ? stayEntry : windowStart
     const stayEnd = stayExit < refDate ? stayExit : refDate
     
@@ -75,11 +63,9 @@ function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
   return usedDays.size
 }
 
-// Merge overlapping or adjacent stays
 function mergeStays(stays: Stay[]): Stay[] {
   if (stays.length === 0) return []
   
-  // Filter out invalid stays and sort by entry date
   const validStays = stays
     .filter(stay => stay.entry && stay.exit && stay.entry <= stay.exit)
     .sort((a, b) => a.entry!.getTime() - b.entry!.getTime())
@@ -112,12 +98,10 @@ function mergeStays(stays: Stay[]): Stay[] {
   return merged
 }
 
-// Calculate latest safe exit date for a planned entry
 function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
   const mergedStays = mergeStays(stays)
   const normalizedEntry = normalizeDate(entryDate)
   
-  // Simulate day by day to find when we'd exceed 90 days
   for (let day = 0; day < 90; day++) {
     const testDate = new Date(normalizedEntry)
     testDate.setDate(testDate.getDate() + day)
@@ -126,19 +110,16 @@ function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
     const daysUsed = calculateDaysUsed(mergedStays, testDate)
     
     if (daysUsed >= 90) {
-      // Go back one day to find the last safe day
       testDate.setDate(testDate.getDate() - 1)
       return toISODate(testDate)
     }
   }
   
-  // If we can stay the full 90 days
   const maxExit = new Date(normalizedEntry)
   maxExit.setDate(maxExit.getDate() + 89) // 90 days inclusive
   return toISODate(maxExit)
 }
 
-// Main calculation function
 export function calculateSchengenStatus(
   pastStays: Stay[],
   plannedEntry: Date | null,
@@ -146,7 +127,6 @@ export function calculateSchengenStatus(
 ): CalculationResult {
   const today = normalizeDate(new Date())
   
-  // Calculate days left today
   const daysUsedToday = calculateDaysUsed(pastStays, today)
   const daysLeft = Math.max(0, 90 - daysUsedToday)
   
@@ -160,54 +140,35 @@ export function calculateSchengenStatus(
     }
   }
   
-  // Normalize planned entry date
   const normalizedPlannedEntry = normalizeDate(plannedEntry)
-  
-  // Calculate days used on planned entry
   const daysUsedOnEntry = calculateDaysUsed(pastStays, normalizedPlannedEntry)
   const daysRemainingOnEntry = Math.max(0, 90 - daysUsedOnEntry)
-  
-  // Calculate latest safe exit
   const latestSafeExit = calculateLatestSafeExit(pastStays, normalizedPlannedEntry)
   
-  // Check if planned trip is valid
   let tripValid = true
   let requiredExitDate: string | undefined
   let daysRemainingAfterTrip: number | undefined
-  
-  // Determine what "Days Left in EU" should show
-  // If there's a planned exit, show days remaining after the trip
-  // Otherwise, show days remaining on the planned entry date
   let daysLeftToShow: number
   
   if (plannedExit) {
-    // Normalize planned exit date
     const normalizedPlannedExit = normalizeDate(plannedExit)
     
-    // Create a temporary stays array that includes the planned trip
     const staysWithPlannedTrip = [
       ...pastStays.filter(stay => stay.entry && stay.exit),
       { entry: normalizedPlannedEntry, exit: normalizedPlannedExit }
     ]
     
-    // Check if the planned exit would exceed 90 days
     const daysUsedOnExit = calculateDaysUsed(staysWithPlannedTrip, normalizedPlannedExit)
     tripValid = daysUsedOnExit <= 90
-    
-    // Calculate remaining days after the trip
     daysRemainingAfterTrip = Math.max(0, 90 - daysUsedOnExit)
-    
-    // Days left should show days remaining after the trip
     daysLeftToShow = daysRemainingAfterTrip
   } else {
-    // If no exit date provided, use the latest safe exit
     requiredExitDate = latestSafeExit
-    // Days left should show days remaining on entry date
     daysLeftToShow = daysRemainingOnEntry
   }
   
   return {
-    daysLeft: daysLeftToShow, // Show days remaining relevant to the planned trip
+    daysLeft: daysLeftToShow,
     tripValid,
     daysUsedOnEntry,
     daysRemainingOnEntry,
@@ -217,7 +178,6 @@ export function calculateSchengenStatus(
   }
 }
 
-// Format date for display (11 April 2025 or 11 Prill 2025)
 export function formatDate(date: Date, locale: string = 'en'): string {
   const day = date.getDate()
   const year = date.getFullYear()
@@ -234,7 +194,6 @@ export function formatDate(date: Date, locale: string = 'en'): string {
   return `${day} ${monthName} ${year}`
 }
 
-// Parse date from dd-MM-yyyy format
 export function parseDate(dateString: string): Date | null {
   const parts = dateString.split('-')
   if (parts.length !== 3) return null
