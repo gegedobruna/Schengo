@@ -32,7 +32,7 @@
       </div>
     </div>
     
-    <div class="max-w-4xl mx-auto space-y-8 flex-1">
+    <div class="max-w-7xl mx-auto space-y-8 flex-1">
       <div class="text-center mb-4">
         <img 
           :src="logoImage" 
@@ -78,7 +78,7 @@
         </div>
         
         <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 items-end">
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <label class="label">{{ t('entryDate') }}</label>
             <VueDatePicker 
               v-model="entry.entry" 
@@ -89,11 +89,11 @@
               :teleport="true"
               :auto-position="true"
               :class="{ 'error-border': pastEntryErrors[index]?.entry }"
-              @update:model-value="validateAllPastEntries"
+              @update:model-value="() => validateAllPastEntries(false)"
             />
             <p v-if="pastEntryErrors[index]?.entry" class="text-red-500 text-sm mt-1">{{ pastEntryErrors[index].entry }}</p>
           </div>
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <label class="label">{{ t('exitDate') }}</label>
             <VueDatePicker 
               v-model="entry.exit" 
@@ -104,7 +104,7 @@
               :teleport="true"
               :auto-position="true"
               :class="{ 'error-border': pastEntryErrors[index]?.exit }"
-              @update:model-value="validateAllPastEntries"
+              @update:model-value="() => validateAllPastEntries(false)"
             />
             <p v-if="pastEntryErrors[index]?.exit" class="text-red-500 text-sm mt-1">{{ pastEntryErrors[index].exit }}</p>
           </div>
@@ -139,7 +139,7 @@
         </div>
         
         <div class="grid md:grid-cols-2 gap-6 mb-6">
-          <div>
+          <div class="min-w-0">
             <label class="label">{{ t('plannedEntryDate') }}</label>
             <VueDatePicker 
               v-model="plannedEntry" 
@@ -154,7 +154,7 @@
             />
             <p v-if="plannedTripErrors.entry" class="text-red-500 text-sm mt-1">{{ plannedTripErrors.entry }}</p>
           </div>
-          <div>
+          <div class="min-w-0">
             <label class="label">{{ t('plannedExitDate') }}</label>
             <VueDatePicker 
               v-model="plannedExit" 
@@ -235,7 +235,7 @@
           </div>
           
           <div v-for="(entry, index) in insidePastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 items-end">
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
               <label class="label">{{ t('entryDate') }}</label>
               <VueDatePicker 
                 v-model="entry.entry" 
@@ -246,11 +246,11 @@
                 :teleport="true"
                 :auto-position="true"
                 :class="{ 'error-border': insidePastEntryErrors[index]?.entry }"
-                @update:model-value="validateAllInsidePastEntries"
+                @update:model-value="() => validateAllInsidePastEntries(false)"
               />
               <p v-if="insidePastEntryErrors[index]?.entry" class="text-red-500 text-sm mt-1">{{ insidePastEntryErrors[index].entry }}</p>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
               <label class="label">{{ t('exitDate') }}</label>
               <VueDatePicker 
                 v-model="entry.exit" 
@@ -261,7 +261,7 @@
                 :teleport="true"
                 :auto-position="true"
                 :class="{ 'error-border': insidePastEntryErrors[index]?.exit }"
-                @update:model-value="validateAllInsidePastEntries"
+                @update:model-value="() => validateAllInsidePastEntries(false)"
               />
               <p v-if="insidePastEntryErrors[index]?.exit" class="text-red-500 text-sm mt-1">{{ insidePastEntryErrors[index].exit }}</p>
             </div>
@@ -296,7 +296,7 @@
           </div>
           
           <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <div>
+            <div class="min-w-0">
               <label class="label">{{ t('lastEntryDate') }}</label>
               <VueDatePicker 
                 v-model="lastEntryDate" 
@@ -523,15 +523,20 @@ const pastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({
 const plannedTripErrors = ref<{ entry?: string, exit?: string }>({})
 const lastEntryErrors = ref<string>('')
 
-// Validation watchers
-const validateAllPastEntries = () => {
+// Validation watchers - only validate when both dates are present or on calculate
+const validateAllPastEntries = (force = false) => {
   const newErrors: Record<number, { entry?: string, exit?: string }> = {}
   pastEntries.value.forEach((stay, index) => {
-    const errors = validatePastEntry(stay)
-    if (errors.length > 0) {
-      newErrors[index] = {
-        entry: errors.find(e => e.includes('entry') || e.includes('Entry')) || errors[0],
-        exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+    // Only validate if both dates are filled OR if forced (on calculate)
+    const hasBothDates = stay.entry && stay.exit
+    
+    if (force || hasBothDates) {
+      const errors = validatePastEntry(stay)
+      if (errors.length > 0) {
+        newErrors[index] = {
+          entry: errors.find(e => e.includes('entry') || e.includes('Entry')) || errors[0],
+          exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+        }
       }
     }
   })
@@ -552,8 +557,8 @@ const validateLastEntryDate = () => {
 }
 
 const calculate = () => {
-  // Validate all past entries
-  validateAllPastEntries()
+  // Validate all past entries (force validation)
+  validateAllPastEntries(true)
   const hasPastErrors = Object.keys(pastEntryErrors.value).length > 0
   if (hasPastErrors) {
     const firstError = Object.values(pastEntryErrors.value)[0]
@@ -603,14 +608,19 @@ const plannedTripData = computed(() => {
 // Inside mode validation
 const insidePastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({})
 
-const validateAllInsidePastEntries = () => {
+const validateAllInsidePastEntries = (force = false) => {
   const newErrors: Record<number, { entry?: string, exit?: string }> = {}
   insidePastEntries.value.forEach((stay, index) => {
-    const errors = validatePastEntry(stay)
-    if (errors.length > 0) {
-      newErrors[index] = {
-        entry: errors.find(e => e.includes('entry') || e.includes('Entry')) || errors[0],
-        exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+    // Only validate if both dates are filled OR if forced (on calculate)
+    const hasBothDates = stay.entry && stay.exit
+    
+    if (force || hasBothDates) {
+      const errors = validatePastEntry(stay)
+      if (errors.length > 0) {
+        newErrors[index] = {
+          entry: errors.find(e => e.includes('entry') || e.includes('Entry')) || errors[0],
+          exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+        }
       }
     }
   })
@@ -618,8 +628,8 @@ const validateAllInsidePastEntries = () => {
 }
 
 const calculateInside = () => {
-  // Validate all past entries
-  validateAllInsidePastEntries()
+  // Validate all past entries (force validation)
+  validateAllInsidePastEntries(true)
   const hasPastErrors = Object.keys(insidePastEntryErrors.value).length > 0
   if (hasPastErrors) {
     const firstError = Object.values(insidePastEntryErrors.value)[0]

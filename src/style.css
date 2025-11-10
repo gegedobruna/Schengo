@@ -241,6 +241,25 @@
     background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    width: 100%;
+    min-width: 900px;
+    box-sizing: border-box;
+  }
+  
+  /* Ensure error messages don't expand cards */
+  .card .text-red-500 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Ensure date picker inputs maintain consistent width */
+  .card .dp__input_wrap {
+    width: 100%;
+    min-width: 200px;
+  }
+  
+  .card .dp__input {
+    width: 100%;
   }
   
   .card:hover {
