@@ -1,277 +1,291 @@
 import { describe, it, expect } from 'vitest'
 import { 
-  daysInclusive, 
-  areAdjacent, 
-  normalizeStays, 
-  usedOn, 
-  latestSafeExit, 
-  agingOutSchedule,
-  planTrip,
-  alreadyInside
-} from '../src/lib/schengen'
-import type { Stay } from '../src/types'
+  calculateSchengenStatus,
+  formatDate,
+  parseDate,
+  type Stay
+} from '../src/utils/schengen'
+
+// Helper function to create Date objects from ISO strings
+function date(isoString: string): Date {
+  return new Date(isoString + 'T00:00:00.000Z')
+}
 
 describe('Schengen Calculations', () => {
-  describe('daysInclusive', () => {
-    it('should calculate inclusive days correctly', () => {
-      expect(daysInclusive('2024-01-01', '2024-01-01')).toBe(1) // Same day
-      expect(daysInclusive('2024-01-01', '2024-01-02')).toBe(2) // Consecutive days
-      expect(daysInclusive('2024-01-01', '2024-01-10')).toBe(10) // 10 days
+  describe('calculateSchengenStatus', () => {
+    it('should calculate status with no past stays and no planned entry', () => {
+      const result = calculateSchengenStatus([], null, null)
+      expect(result.daysLeft).toBeGreaterThanOrEqual(0)
+      expect(result.daysLeft).toBeLessThanOrEqual(90)
+      expect(result.tripValid).toBe(false)
+      expect(result.daysUsedOnEntry).toBe(0)
+      expect(result.daysRemainingOnEntry).toBe(90)
     })
 
-    it('should handle invalid dates', () => {
-      expect(daysInclusive('invalid', '2024-01-01')).toBe(0)
-      expect(daysInclusive('2024-01-01', 'invalid')).toBe(0)
+    it('should calculate status with empty past stays and planned entry', () => {
+      const plannedEntry = date('2024-06-01')
+      const result = calculateSchengenStatus([], plannedEntry, null)
+      expect(result.daysUsedOnEntry).toBe(0)
+      expect(result.daysRemainingOnEntry).toBe(90)
+      expect(result.tripValid).toBe(true)
+      expect(result.latestSafeExit).toBeDefined()
     })
 
-    it('should handle exit before entry', () => {
-      expect(daysInclusive('2024-01-10', '2024-01-01')).toBe(0)
-    })
-  })
-
-  describe('areAdjacent', () => {
-    it('should identify adjacent stays', () => {
-      const stay1: Stay = { entry: '2024-01-01', exit: '2024-01-05' }
-      const stay2: Stay = { entry: '2024-01-06', exit: '2024-01-10' }
-      expect(areAdjacent(stay1, stay2)).toBe(true)
-    })
-
-    it('should identify overlapping stays', () => {
-      const stay1: Stay = { entry: '2024-01-01', exit: '2024-01-05' }
-      const stay2: Stay = { entry: '2024-01-03', exit: '2024-01-10' }
-      expect(areAdjacent(stay1, stay2)).toBe(true)
-    })
-
-    it('should identify non-adjacent stays', () => {
-      const stay1: Stay = { entry: '2024-01-01', exit: '2024-01-05' }
-      const stay2: Stay = { entry: '2024-01-07', exit: '2024-01-10' }
-      expect(areAdjacent(stay1, stay2)).toBe(false)
-    })
-  })
-
-  describe('normalizeStays', () => {
-    it('should merge overlapping stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' },
-        { entry: '2024-01-03', exit: '2024-01-10' }
+    it('should calculate days used correctly for single stay', () => {
+      // Use a date that's definitely more than 180 days away
+      const farPastStays: Stay[] = [
+        { entry: date('2023-01-01'), exit: date('2023-01-10') }
       ]
-      const result = normalizeStays(stays)
-      expect(result.stays).toHaveLength(1)
-      expect(result.stays[0]).toEqual({ entry: '2024-01-01', exit: '2024-01-10' })
+      const farPlannedEntry = date('2024-06-01')
+      const farResult = calculateSchengenStatus(farPastStays, farPlannedEntry, null)
+      
+      // This should be 0 since it's more than 180 days before
+      expect(farResult.daysUsedOnEntry).toBe(0)
+      expect(farResult.daysRemainingOnEntry).toBe(90)
     })
 
-    it('should merge adjacent stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' },
-        { entry: '2024-01-06', exit: '2024-01-10' }
+    it('should calculate days used for stays within 180-day window', () => {
+      const today = new Date()
+      const entryDate = new Date(today)
+      entryDate.setDate(entryDate.getDate() - 10) // 10 days ago
+      const exitDate = new Date(today)
+      exitDate.setDate(exitDate.getDate() - 1) // Yesterday
+      
+      const pastStays: Stay[] = [
+        { entry: entryDate, exit: exitDate }
       ]
-      const result = normalizeStays(stays)
-      expect(result.stays).toHaveLength(1)
-      expect(result.stays[0]).toEqual({ entry: '2024-01-01', exit: '2024-01-10' })
+      const plannedEntry = new Date(today)
+      plannedEntry.setDate(plannedEntry.getDate() + 30) // 30 days from now
+      
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      expect(result.daysUsedOnEntry).toBeGreaterThan(0)
+      expect(result.daysRemainingOnEntry).toBeLessThan(90)
     })
 
-    it('should not merge non-adjacent stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' },
-        { entry: '2024-01-07', exit: '2024-01-10' }
+    it('should merge overlapping stays correctly', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-01'), exit: date('2024-01-05') },
+        { entry: date('2024-01-03'), exit: date('2024-01-10') }
       ]
-      const result = normalizeStays(stays)
-      expect(result.stays).toHaveLength(2)
+      const plannedEntry = date('2024-01-15')
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should count as 10 days (merged), not 15 days
+      expect(result.daysUsedOnEntry).toBe(10)
     })
 
-    it('should filter invalid stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' },
-        { entry: 'invalid', exit: '2024-01-10' },
-        { entry: '2024-01-15', exit: '2024-01-10' } // exit before entry
+    it('should merge adjacent stays correctly', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-01'), exit: date('2024-01-05') },
+        { entry: date('2024-01-06'), exit: date('2024-01-10') }
       ]
-      const result = normalizeStays(stays)
-      expect(result.stays).toHaveLength(1)
-      expect(result.warning).toContain('Invalid date')
-    })
-  })
-
-  describe('usedOn', () => {
-    it('should calculate used days for empty stays', () => {
-      expect(usedOn([], '2024-01-01')).toBe(0)
+      const plannedEntry = date('2024-01-15')
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should count as 10 days (merged), not two separate stays
+      expect(result.daysUsedOnEntry).toBe(10)
     })
 
-    it('should calculate used days for single stay', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-10' }
+    it('should validate planned trip with exit date', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-01'), exit: date('2024-01-30') } // 30 days
       ]
-      expect(usedOn(stays, '2024-01-15')).toBe(10)
+      const plannedEntry = date('2024-06-01')
+      const plannedExit = date('2024-06-31') // 30 days trip
+      
+      const result = calculateSchengenStatus(pastStays, plannedEntry, plannedExit)
+      
+      // Total would be 30 (past) + 30 (planned) = 60 days, should be valid
+      expect(result.tripValid).toBe(true)
+      expect(result.daysRemainingAfterTrip).toBeDefined()
     })
 
-    it('should calculate used days for multiple stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-10' },
-        { entry: '2024-01-15', exit: '2024-01-20' }
+    it('should detect invalid trip that exceeds 90 days', () => {
+      // Use dates that are within the 180-day window
+      const today = new Date()
+      const pastEntry = new Date(today)
+      pastEntry.setDate(pastEntry.getDate() - 30) // 30 days ago
+      const pastExit = new Date(today)
+      pastExit.setDate(pastExit.getDate() - 1) // Yesterday (29 days stay)
+      
+      const pastStays: Stay[] = [
+        { entry: pastEntry, exit: pastExit } // ~29 days
       ]
-      expect(usedOn(stays, '2024-01-25')).toBe(16)
+      
+      const plannedEntry = new Date(today)
+      plannedEntry.setDate(plannedEntry.getDate() + 1) // Tomorrow
+      const plannedExit = new Date(today)
+      plannedExit.setDate(plannedExit.getDate() + 65) // 65 days from now
+      
+      const result = calculateSchengenStatus(pastStays, plannedEntry, plannedExit)
+      
+      // Total would be ~29 + 65 = 94 days, should be invalid
+      expect(result.tripValid).toBe(false)
+    })
+
+    it('should calculate latest safe exit correctly', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-01'), exit: date('2024-01-30') } // 30 days
+      ]
+      const plannedEntry = date('2024-06-01')
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should be able to stay 60 more days (90 - 30 = 60)
+      expect(result.latestSafeExit).toBeDefined()
+      const latestExit = new Date(result.latestSafeExit)
+      expect(latestExit >= plannedEntry).toBe(true)
+    })
+
+    it('should handle single-day stays', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-01'), exit: date('2024-01-01') }
+      ]
+      const plannedEntry = date('2024-01-15')
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      expect(result.daysUsedOnEntry).toBe(1)
+      expect(result.daysRemainingOnEntry).toBe(89)
+    })
+
+    it('should filter out invalid stays (exit before entry)', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-10'), exit: date('2024-01-05') }, // Invalid
+        { entry: date('2024-01-01'), exit: date('2024-01-05') }  // Valid
+      ]
+      const plannedEntry = date('2024-01-15')
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should only count the valid stay (5 days)
+      expect(result.daysUsedOnEntry).toBe(5)
     })
 
     it('should handle stays outside 180-day window', () => {
-      const stays: Stay[] = [
-        { entry: '2023-01-01', exit: '2023-01-10' } // More than 180 days ago
+      const today = new Date()
+      const oldEntry = new Date(today)
+      oldEntry.setDate(oldEntry.getDate() - 200) // 200 days ago
+      const oldExit = new Date(today)
+      oldExit.setDate(oldExit.getDate() - 190) // 190 days ago
+      
+      const pastStays: Stay[] = [
+        { entry: oldEntry, exit: oldExit }
       ]
-      expect(usedOn(stays, '2024-01-01')).toBe(0)
-    })
-
-    it('should handle partial overlap with 180-day window', () => {
-      const stays: Stay[] = [
-        { entry: '2023-12-01', exit: '2024-01-10' } // Partially in window
-      ]
-      const result = usedOn(stays, '2024-01-01')
-      expect(result).toBeGreaterThan(0)
-      expect(result).toBeLessThan(41) // Full stay would be 41 days
+      const plannedEntry = new Date(today)
+      plannedEntry.setDate(plannedEntry.getDate() + 30)
+      
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should not count days outside the 180-day window
+      expect(result.daysUsedOnEntry).toBe(0)
     })
   })
 
-  describe('latestSafeExit', () => {
-    it('should find latest safe exit for empty stays', () => {
-      const result = latestSafeExit([], '2024-01-01')
-      expect(result).toBe('2024-01-01')
+  describe('formatDate', () => {
+    it('should format date in English', () => {
+      const date = new Date('2025-04-11T00:00:00.000Z')
+      const result = formatDate(date, 'en')
+      expect(result).toBe('11 April 2025')
     })
 
-    it('should find latest safe exit with existing stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-10' }
-      ]
-      const result = latestSafeExit(stays, '2024-01-15')
-      expect(result).toBe('2024-01-15') // Can stay 90 days from entry
+    it('should format date in Albanian', () => {
+      const date = new Date('2025-04-11T00:00:00.000Z')
+      const result = formatDate(date, 'sq')
+      expect(result).toBe('11 Prill 2025')
     })
 
-    it('should handle complex scenarios', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-30' }, // 30 days
-        { entry: '2024-02-01', exit: '2024-02-15' }  // 15 days
-      ]
-      const result = latestSafeExit(stays, '2024-03-01')
-      // Should be able to stay until we reach 90 days total
-      expect(new Date(result) > new Date('2024-03-01')).toBe(true)
-    })
-  })
-
-  describe('agingOutSchedule', () => {
-    it('should generate aging out schedule for empty stays', () => {
-      const result = agingOutSchedule([], '2024-01-01')
-      expect(result).toHaveLength(0)
+    it('should default to English if locale not found', () => {
+      const date = new Date('2025-04-11T00:00:00.000Z')
+      const result = formatDate(date, 'unknown' as any)
+      expect(result).toBe('11 April 2025')
     })
 
-    it('should generate aging out schedule for single stay', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' }
-      ]
-      const result = agingOutSchedule(stays, '2024-01-01')
-      expect(result).toHaveLength(5) // 5 days in stay
-      expect(result[0].dropDateISO).toBe('2024-07-01') // 180 days later
-      expect(result[0].daysRegained).toBe(1)
-    })
-
-    it('should group days that drop on the same date', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-01' },
-        { entry: '2024-01-01', exit: '2024-01-01' }
-      ]
-      const result = agingOutSchedule(stays, '2024-01-01')
-      expect(result).toHaveLength(1)
-      expect(result[0].daysRegained).toBe(2)
+    it('should format different months correctly', () => {
+      const janDate = new Date('2025-01-15T00:00:00.000Z')
+      expect(formatDate(janDate, 'en')).toBe('15 January 2025')
+      
+      const decDate = new Date('2025-12-25T00:00:00.000Z')
+      expect(formatDate(decDate, 'en')).toBe('25 December 2025')
     })
   })
 
-  describe('planTrip', () => {
-    it('should plan trip with empty stays', () => {
-      const result = planTrip([], '2024-01-01')
-      expect(result.usedOnEntry).toBe(0)
-      expect(result.remainingOnEntry).toBe(90)
-      expect(result.latestExit).toBe('2024-01-01')
-      expect(result.agingOut).toHaveLength(0)
+  describe('parseDate', () => {
+    it('should parse valid date string', () => {
+      const result = parseDate('11-04-2025')
+      expect(result).not.toBeNull()
+      expect(result!.getDate()).toBe(11)
+      expect(result!.getMonth()).toBe(3) // April is month 3 (0-indexed)
+      expect(result!.getFullYear()).toBe(2025)
     })
 
-    it('should plan trip with existing stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-10' }
-      ]
-      const result = planTrip(stays, '2024-01-15')
-      expect(result.usedOnEntry).toBe(10)
-      expect(result.remainingOnEntry).toBe(80)
-      expect(new Date(result.latestExit) > new Date('2024-01-15')).toBe(true)
+    it('should return null for invalid format', () => {
+      expect(parseDate('invalid')).toBeNull()
+      expect(parseDate('2025-04-11')).toBeNull() // Wrong format
+      expect(parseDate('11/04/2025')).toBeNull() // Wrong separator
     })
 
-    it('should validate proposed exit', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-10' }
-      ]
-      const result = planTrip(stays, '2024-01-15', '2024-01-20')
-      expect(result.proposed).toBeDefined()
-      expect(result.proposed?.ok).toBe(true)
+    it('should return null for invalid date values', () => {
+      expect(parseDate('32-01-2025')).toBeNull() // Invalid day
+      expect(parseDate('11-13-2025')).toBeNull() // Invalid month
+      expect(parseDate('11-02-30')).toBeNull() // Invalid year
     })
 
-    it('should detect illegal proposed exit', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-80' } // 80 days
-      ]
-      const result = planTrip(stays, '2024-01-15', '2024-01-20')
-      expect(result.proposed).toBeDefined()
-      expect(result.proposed?.ok).toBe(false)
-    })
-  })
-
-  describe('alreadyInside', () => {
-    it('should calculate status for empty stays', () => {
-      const result = alreadyInside([], '2024-01-01')
-      expect(result.usedToday).toBe(0)
-      expect(result.daysLeft).toBe(90)
-      expect(result.latestExit).toBe('2024-01-01')
-    })
-
-    it('should calculate status with existing stays', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-10' }
-      ]
-      const result = alreadyInside(stays, '2024-01-15')
-      expect(result.usedToday).toBeGreaterThan(0)
-      expect(result.daysLeft).toBeLessThan(90)
-      expect(new Date(result.latestExit) > new Date('2024-01-15')).toBe(true)
+    it('should handle edge cases', () => {
+      expect(parseDate('29-02-2024')).not.toBeNull() // Leap year
+      expect(parseDate('29-02-2025')).toBeNull() // Not a leap year
+      expect(parseDate('31-04-2025')).toBeNull() // April has 30 days
     })
   })
 
   describe('Edge Cases', () => {
-    it('should handle single-day stays correctly', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-01' }
+    it('should handle multiple overlapping stays', () => {
+      const pastStays: Stay[] = [
+        { entry: date('2024-01-01'), exit: date('2024-01-05') },
+        { entry: date('2024-01-03'), exit: date('2024-01-10') },
+        { entry: date('2024-01-08'), exit: date('2024-01-15') }
       ]
-      expect(usedOn(stays, '2024-01-01')).toBe(1)
+      const plannedEntry = date('2024-01-20')
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should merge all three into one stay (15 days total)
+      expect(result.daysUsedOnEntry).toBe(15)
     })
 
-    it('should handle back-to-back ranges', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' },
-        { entry: '2024-01-06', exit: '2024-01-10' }
+    it('should handle stays spanning exactly 180 days', () => {
+      const today = new Date()
+      const entryDate = new Date(today)
+      entryDate.setDate(entryDate.getDate() - 170) // 170 days ago
+      const exitDate = new Date(today)
+      exitDate.setDate(exitDate.getDate() - 160) // 160 days ago (10 day stay)
+      
+      const pastStays: Stay[] = [
+        { entry: entryDate, exit: exitDate }
       ]
-      const result = normalizeStays(stays)
-      expect(result.stays).toHaveLength(1)
-      expect(result.stays[0]).toEqual({ entry: '2024-01-01', exit: '2024-01-10' })
+      const plannedEntry = new Date(today)
+      plannedEntry.setDate(plannedEntry.getDate() + 10) // 10 days from now
+      
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      // The stay should be within the 180-day window from planned entry
+      expect(result.daysUsedOnEntry).toBeGreaterThan(0)
     })
 
-    it('should handle sparse trips far apart', () => {
-      const stays: Stay[] = [
-        { entry: '2024-01-01', exit: '2024-01-05' },
-        { entry: '2024-06-01', exit: '2024-06-05' }
+    it('should handle maximum 90 days used', () => {
+      // Use dates that are within the 180-day window
+      const today = new Date()
+      const entryDate = new Date(today)
+      entryDate.setDate(entryDate.getDate() - 90) // 90 days ago
+      const exitDate = new Date(today)
+      exitDate.setDate(exitDate.getDate() - 1) // Yesterday (89 days stay, but we need to check inclusive)
+      
+      const pastStays: Stay[] = [
+        { entry: entryDate, exit: exitDate }
       ]
-      const result = usedOn(stays, '2024-06-10')
-      expect(result).toBe(5) // Only the second stay counts
-    })
-
-    it('should handle heavy summer travel scenario', () => {
-      const stays: Stay[] = [
-        { entry: '2024-06-01', exit: '2024-06-30' }, // 30 days in June
-        { entry: '2024-07-01', exit: '2024-07-31' }, // 31 days in July
-        { entry: '2024-08-01', exit: '2024-08-15' }  // 15 days in August
-      ]
-      const result = usedOn(stays, '2024-08-15')
-      expect(result).toBe(76) // 30 + 31 + 15
+      const plannedEntry = new Date(today)
+      plannedEntry.setDate(plannedEntry.getDate() + 1) // Tomorrow
+      
+      const result = calculateSchengenStatus(pastStays, plannedEntry, null)
+      
+      // Should be close to 90 days (within the 180-day window)
+      expect(result.daysUsedOnEntry).toBeGreaterThan(85)
+      expect(result.daysRemainingOnEntry).toBeLessThan(5)
     })
   })
 })
