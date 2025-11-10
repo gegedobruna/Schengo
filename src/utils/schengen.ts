@@ -35,19 +35,36 @@ function getDaysInRange(start: Date, end: Date): Date[] {
   return days
 }
 
+// Normalize date to start of day (midnight)
+function normalizeDate(date: Date): Date {
+  const normalized = new Date(date)
+  normalized.setHours(0, 0, 0, 0)
+  return normalized
+}
+
 // Calculate days used in rolling 180-day window
 function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
-  const windowStart = new Date(referenceDate)
+  // Merge overlapping stays first to avoid double-counting
+  const mergedStays = mergeStays(stays)
+  
+  // Normalize reference date to start of day
+  const refDate = normalizeDate(referenceDate)
+  const windowStart = new Date(refDate)
   windowStart.setDate(windowStart.getDate() - 179) // 180 days inclusive
+  windowStart.setHours(0, 0, 0, 0)
   
   const usedDays = new Set<string>()
   
-  for (const stay of stays) {
+  for (const stay of mergedStays) {
     if (!stay.entry || !stay.exit) continue
     
+    // Normalize stay dates
+    const stayEntry = normalizeDate(stay.entry)
+    const stayExit = normalizeDate(stay.exit)
+    
     // Only count stays that overlap with the rolling window
-    const stayStart = stay.entry > windowStart ? stay.entry : windowStart
-    const stayEnd = stay.exit < referenceDate ? stay.exit : referenceDate
+    const stayStart = stayEntry > windowStart ? stayEntry : windowStart
+    const stayEnd = stayExit < refDate ? stayExit : refDate
     
     if (stayStart <= stayEnd) {
       const days = getDaysInRange(stayStart, stayEnd)
@@ -98,12 +115,13 @@ function mergeStays(stays: Stay[]): Stay[] {
 // Calculate latest safe exit date for a planned entry
 function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
   const mergedStays = mergeStays(stays)
-  let currentDate = new Date(entryDate)
+  const normalizedEntry = normalizeDate(entryDate)
   
   // Simulate day by day to find when we'd exceed 90 days
   for (let day = 0; day < 90; day++) {
-    const testDate = new Date(currentDate)
+    const testDate = new Date(normalizedEntry)
     testDate.setDate(testDate.getDate() + day)
+    testDate.setHours(0, 0, 0, 0)
     
     const daysUsed = calculateDaysUsed(mergedStays, testDate)
     
@@ -115,7 +133,7 @@ function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
   }
   
   // If we can stay the full 90 days
-  const maxExit = new Date(entryDate)
+  const maxExit = new Date(normalizedEntry)
   maxExit.setDate(maxExit.getDate() + 89) // 90 days inclusive
   return toISODate(maxExit)
 }
@@ -126,8 +144,7 @@ export function calculateSchengenStatus(
   plannedEntry: Date | null,
   plannedExit: Date | null
 ): CalculationResult {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0) // Start of day
+  const today = normalizeDate(new Date())
   
   // Calculate days left today
   const daysUsedToday = calculateDaysUsed(pastStays, today)
@@ -143,38 +160,54 @@ export function calculateSchengenStatus(
     }
   }
   
+  // Normalize planned entry date
+  const normalizedPlannedEntry = normalizeDate(plannedEntry)
+  
   // Calculate days used on planned entry
-  const daysUsedOnEntry = calculateDaysUsed(pastStays, plannedEntry)
+  const daysUsedOnEntry = calculateDaysUsed(pastStays, normalizedPlannedEntry)
   const daysRemainingOnEntry = Math.max(0, 90 - daysUsedOnEntry)
   
   // Calculate latest safe exit
-  const latestSafeExit = calculateLatestSafeExit(pastStays, plannedEntry)
+  const latestSafeExit = calculateLatestSafeExit(pastStays, normalizedPlannedEntry)
   
   // Check if planned trip is valid
   let tripValid = true
   let requiredExitDate: string | undefined
   let daysRemainingAfterTrip: number | undefined
   
+  // Determine what "Days Left in EU" should show
+  // If there's a planned exit, show days remaining after the trip
+  // Otherwise, show days remaining on the planned entry date
+  let daysLeftToShow: number
+  
   if (plannedExit) {
+    // Normalize planned exit date
+    const normalizedPlannedExit = normalizeDate(plannedExit)
+    
     // Create a temporary stays array that includes the planned trip
     const staysWithPlannedTrip = [
       ...pastStays.filter(stay => stay.entry && stay.exit),
-      { entry: plannedEntry, exit: plannedExit }
+      { entry: normalizedPlannedEntry, exit: normalizedPlannedExit }
     ]
     
     // Check if the planned exit would exceed 90 days
-    const daysUsedOnExit = calculateDaysUsed(staysWithPlannedTrip, plannedExit)
+    const daysUsedOnExit = calculateDaysUsed(staysWithPlannedTrip, normalizedPlannedExit)
     tripValid = daysUsedOnExit <= 90
     
     // Calculate remaining days after the trip
     daysRemainingAfterTrip = Math.max(0, 90 - daysUsedOnExit)
+    
+    // Days left should show days remaining after the trip
+    daysLeftToShow = daysRemainingAfterTrip
   } else {
     // If no exit date provided, use the latest safe exit
     requiredExitDate = latestSafeExit
+    // Days left should show days remaining on entry date
+    daysLeftToShow = daysRemainingOnEntry
   }
   
   return {
-    daysLeft,
+    daysLeft: daysLeftToShow, // Show days remaining relevant to the planned trip
     tripValid,
     daysUsedOnEntry,
     daysRemainingOnEntry,
