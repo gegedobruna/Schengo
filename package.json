@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "format": "prettier --write src/",
+    "dev": "vite --config config/vite.config.ts",
+    "build": "vue-tsc --project config/tsconfig.json && vite build --config config/vite.config.ts",
+    "preview": "vite preview --config config/vite.config.ts",
+    "test": "vitest --config config/vite.config.ts",
+    "test:ui": "vitest --ui --config config/vite.config.ts",
+    "test:coverage": "vitest --coverage --config config/vite.config.ts",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore --config config/.eslintrc.cjs",
+    "format": "prettier --write src/ --config config/.prettierrc",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
