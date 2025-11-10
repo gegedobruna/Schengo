@@ -1,9 +1,12 @@
 <template>
   <div class="min-h-screen p-6 md:p-8 relative">
-    <div class="max-w-4xl mx-auto space-y-8">
-      <div class="text-center mb-10">
-        <h1 class="text-4xl md:text-5xl font-bold mb-3 text-white drop-shadow-lg">Schengen Planner</h1>
-        <p class="text-white/90 text-lg drop-shadow">Plan your travels with confidence</p>
+    <div class="max-w-4xl mx-auto space-y-6">
+      <div class="text-center mb-2">
+        <img 
+          :src="logoImage" 
+          alt="Schengen Planner" 
+          class="mx-auto max-w-[200px] md:max-w-[250px] h-auto drop-shadow-lg brightness-0 invert"
+        />
       </div>
       
       <!-- Past Entries -->
@@ -153,6 +156,7 @@ import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { calculateSchengenStatus, formatDate, type Stay, type CalculationResult } from './utils/schengen'
 import TimelineVisualizer from './components/TimelineVisualizer.vue'
+import logoImage from './utils/background/logo.webp'
 
 const pastEntries = ref<Stay[]>([
   { entry: null, exit: null }
