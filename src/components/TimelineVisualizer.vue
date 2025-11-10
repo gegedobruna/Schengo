@@ -1,21 +1,21 @@
 <template>
   <div class="timeline-container">
-    <h3 class="text-lg font-semibold mb-4 text-gray-800">Timeline Visualizer</h3>
+    <h3 class="text-lg font-semibold mb-4 text-gray-800">{{ t('timelineVisualizer') }}</h3>
     
     <div class="timeline-wrapper">
       <!-- Timeline Header -->
       <div class="timeline-header">
-        <div class="timeline-title">Schengen Stay Timeline</div>
-        <div class="timeline-subtitle">Rolling 180-day window visualization</div>
+        <div class="timeline-title">{{ t('schengenStayTimeline') }}</div>
+        <div class="timeline-subtitle">{{ t('rollingWindowVisualization') }}</div>
       </div>
       
       <!-- Timeline Graph -->
       <div class="timeline-graph">
         <!-- Y-axis labels -->
         <div class="y-axis">
-          <div class="y-label">Past Stays</div>
-          <div class="y-label">Planned Trip</div>
-          <div class="y-label">Rolling Window</div>
+          <div class="y-label">{{ t('pastStays') }}</div>
+          <div class="y-label">{{ t('plannedTrip') }}</div>
+          <div class="y-label">{{ t('rollingWindow') }}</div>
         </div>
         
         <!-- Timeline content -->
@@ -34,7 +34,7 @@
                  :style="getStayBarStyle(stay, index)">
               <div class="stay-tooltip">
                 <div class="stay-dates">{{ formatDateRange(stay.entry, stay.exit) }}</div>
-                <div class="stay-duration">{{ getDuration(stay.entry, stay.exit) }} days</div>
+                <div class="stay-duration">{{ getDuration(stay.entry, stay.exit) }} {{ t('days') }}</div>
               </div>
             </div>
           </div>
@@ -47,9 +47,9 @@
                  :style="getStayBarStyle(plannedTrip, -1)">
               <div class="stay-tooltip">
                 <div class="stay-dates">{{ formatDateRange(plannedTrip.entry, plannedTrip.exit) }}</div>
-                <div class="stay-duration">{{ getDuration(plannedTrip.entry, plannedTrip.exit) }} days</div>
+                <div class="stay-duration">{{ getDuration(plannedTrip.entry, plannedTrip.exit) }} {{ t('days') }}</div>
                 <div class="stay-label" :class="plannedTrip.hasExitDate !== false ? '' : 'estimated-label'">
-                  {{ plannedTrip.hasExitDate !== false ? 'PLANNED' : 'ESTIMATED (to latest safe exit)' }}
+                  {{ plannedTrip.hasExitDate !== false ? t('planned') : t('estimated') }}
                 </div>
               </div>
             </div>
@@ -59,8 +59,8 @@
           <div class="timeline-row">
             <div class="rolling-window-bar" :style="getRollingWindowStyle()">
               <div class="window-tooltip">
-                <div class="window-label">180-day rolling window</div>
-                <div class="window-days">{{ daysUsedInWindow }} / 90 days used</div>
+                <div class="window-label">{{ t('rollingWindowLabel') }}</div>
+                <div class="window-days">{{ daysUsedInWindow }} {{ t('daysUsedInWindow') }}</div>
               </div>
             </div>
           </div>
@@ -71,19 +71,19 @@
       <div class="timeline-legend">
         <div class="legend-item">
           <div class="legend-color past-color"></div>
-          <span>Past Stays</span>
+          <span>{{ t('pastStays') }}</span>
         </div>
         <div class="legend-item">
           <div class="legend-color planned-color"></div>
-          <span>Planned Trip</span>
+          <span>{{ t('plannedTrip') }}</span>
         </div>
         <div class="legend-item">
           <div class="legend-color estimated-color"></div>
-          <span>Estimated Trip (no exit date)</span>
+          <span>{{ t('estimatedTripNoExit') }}</span>
         </div>
         <div class="legend-item">
           <div class="legend-color window-color"></div>
-          <span>Rolling Window</span>
+          <span>{{ t('rollingWindow') }}</span>
         </div>
       </div>
     </div>
@@ -93,6 +93,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatDate } from '../utils/schengen'
+import { useTranslations } from '../utils/translations'
+
+const { language, t } = useTranslations()
 
 interface Stay {
   entry: Date | null
@@ -145,9 +148,10 @@ const timelineMonths = computed(() => {
   const months = []
   const start = timelineRange.value.start
   const end = timelineRange.value.end
+  const locale = language.value === 'sq' ? 'sq-AL' : 'en-US'
   
   for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) {
-    months.push(d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }))
+    months.push(d.toLocaleDateString(locale, { month: 'short', year: '2-digit' }))
   }
   
   return months
@@ -222,7 +226,7 @@ const getRollingWindowStyle = () => {
 
 const formatDateRange = (entry: Date | null, exit: Date | null): string => {
   if (!entry || !exit) return ''
-  return `${formatDate(entry)} - ${formatDate(exit)}`
+  return `${formatDate(entry, language.value)} - ${formatDate(exit, language.value)}`
 }
 
 const getDuration = (entry: Date | null, exit: Date | null): number => {
