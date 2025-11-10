@@ -12,7 +12,7 @@
           <h2 class="card-title">Past Schengen Entries</h2>
         </div>
         
-        <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 p-4 glass-effect rounded-xl transition-all duration-300 hover:bg-white/80">
+        <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 items-end">
           <div class="flex-1">
             <label class="label">Entry Date</label>
             <VueDatePicker 
@@ -35,20 +35,22 @@
               :auto-position="true"
             />
           </div>
-          <div class="flex items-end">
+          <div class="flex items-center">
             <button 
               @click="removeEntry(index)" 
-              class="btn btn-danger btn-sm"
+              class="btn-transparent-danger w-10 h-10 flex items-center justify-center p-0"
               :disabled="pastEntries.length <= 1"
             >
-              Remove
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
         
         <button 
           @click="addEntry" 
-          class="btn btn-primary w-full md:w-auto"
+          class="btn-transparent-primary w-full md:w-auto"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -90,7 +92,7 @@
         
         <button 
           @click="calculate" 
-          class="btn btn-success w-full md:w-auto"
+          class="btn-transparent-success w-full md:w-auto"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />

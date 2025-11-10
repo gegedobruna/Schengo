@@ -92,6 +92,99 @@
     --tw-ring-color: rgba(16, 185, 129, 0.5);
   }
   
+  .btn-transparent {
+    @apply btn bg-transparent;
+    background: transparent !important;
+    backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .btn-transparent:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .btn-transparent:active,
+  .btn-transparent.active {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .btn-transparent-primary {
+    @apply btn-transparent;
+    color: rgba(59, 130, 246, 0.9);
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-color: rgba(59, 130, 246, 0.3);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  }
+  
+  .btn-transparent-primary:hover {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: rgba(37, 99, 235, 1);
+    border-color: rgba(59, 130, 246, 0.5);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 1);
+  }
+  
+  .btn-transparent-primary:active,
+  .btn-transparent-primary.active {
+    background: rgba(59, 130, 246, 0.25) !important;
+    color: rgba(29, 78, 216, 1);
+    border-color: rgba(59, 130, 246, 0.6);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 1);
+  }
+  
+  .btn-transparent-danger {
+    @apply btn-transparent;
+    color: rgba(220, 38, 38, 0.9);
+    background: rgba(220, 38, 38, 0.08) !important;
+    border-color: rgba(220, 38, 38, 0.3);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  }
+  
+  .btn-transparent-danger:hover {
+    background: rgba(220, 38, 38, 0.15) !important;
+    color: rgba(185, 28, 28, 1);
+    border-color: rgba(220, 38, 38, 0.5);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 1);
+  }
+  
+  .btn-transparent-danger:active,
+  .btn-transparent-danger.active {
+    background: rgba(220, 38, 38, 0.25) !important;
+    color: rgba(153, 27, 27, 1);
+    border-color: rgba(220, 38, 38, 0.6);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 1);
+  }
+  
+  .btn-transparent-success {
+    @apply btn-transparent;
+    color: rgba(16, 185, 129, 0.9);
+    background: rgba(16, 185, 129, 0.08) !important;
+    border-color: rgba(16, 185, 129, 0.3);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  }
+  
+  .btn-transparent-success:hover {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: rgba(5, 150, 105, 1);
+    border-color: rgba(16, 185, 129, 0.5);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 1);
+  }
+  
+  .btn-transparent-success:active,
+  .btn-transparent-success.active {
+    background: rgba(16, 185, 129, 0.25) !important;
+    color: rgba(4, 120, 87, 1);
+    border-color: rgba(16, 185, 129, 0.6);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 1);
+  }
+  
+  .btn-transparent:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    background: transparent !important;
+  }
+  
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }
