@@ -508,6 +508,10 @@ const pastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({
 const plannedTripErrors = ref<{ entry?: string, exit?: string }>({})
 const lastEntryErrors = ref<string>('')
 
+/**
+ * Validates past entries. Only shows errors when both dates are filled
+ * (to avoid annoying users while they're still typing) or when force=true (on calculate).
+ */
 const validateAllPastEntries = (force = false) => {
   const newErrors: Record<number, { entry?: string, exit?: string }> = {}
   pastEntries.value.forEach((stay, index) => {
@@ -602,6 +606,11 @@ const validateAllInsidePastEntries = (force = false) => {
   insidePastEntryErrors.value = newErrors
 }
 
+/**
+ * Calculates status for users already inside Schengen zone.
+ * Includes current stay (from last entry to today) in the calculation,
+ * but calculates latest safe exit based only on past stays (without current stay).
+ */
 const calculateInside = () => {
   validateAllInsidePastEntries(true)
   const hasPastErrors = Object.keys(insidePastEntryErrors.value).length > 0
@@ -624,12 +633,15 @@ const calculateInside = () => {
   const normalizedLastEntry = new Date(lastEntryDate.value!)
   normalizedLastEntry.setHours(0, 0, 0, 0)
   
+  // Include current stay for days left calculation
   const staysWithCurrent = [
     ...validStays,
     { entry: normalizedLastEntry, exit: today }
   ]
   
+  // Calculate days left including current stay
   const result = calculateSchengenStatus(staysWithCurrent, today, null)
+  // Calculate latest safe exit based only on past stays (excludes current stay)
   const exitResult = calculateSchengenStatus(validStays, normalizedLastEntry, null)
   
   insideResults.value = {

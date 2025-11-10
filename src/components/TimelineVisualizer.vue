@@ -161,6 +161,11 @@ const getStayColor = (index: number): string => {
   return colors[index % colors.length]
 }
 
+/**
+ * Calculates CSS positioning for stay bars on the timeline.
+ * Converts absolute dates to percentage positions relative to the timeline range.
+ * Index -1 indicates a planned trip (purple if exit date provided, orange if estimated).
+ */
 const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date; hasExitDate?: boolean }, index: number) => {
   if (!stay.entry || !stay.exit) return {}
   
@@ -175,6 +180,7 @@ const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date; hasExitDate?: b
   
   let color = '#8B5CF6'
   if (index === -1) {
+    // Planned trip: purple if exit date provided, orange if estimated
     const hasExitDate = 'hasExitDate' in stay ? stay.hasExitDate !== false : true
     color = hasExitDate ? '#8B5CF6' : '#F49E4C'
   } else {
@@ -189,6 +195,11 @@ const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date; hasExitDate?: b
   }
 }
 
+/**
+ * Calculates the visual representation of the 180-day rolling window.
+ * The window spans from 179 days before the reference date to the reference date itself.
+ * Uses planned trip entry date as reference if available, otherwise uses today.
+ */
 const getRollingWindowStyle = () => {
   const start = timelineRange.value.start
   const end = timelineRange.value.end
@@ -199,6 +210,7 @@ const getRollingWindowStyle = () => {
     referenceDate = props.plannedTrip.entry
   }
   
+  // Calculate 180-day window: 179 days before reference date to reference date (inclusive)
   const windowStartDate = new Date(referenceDate)
   windowStartDate.setDate(windowStartDate.getDate() - 179)
   

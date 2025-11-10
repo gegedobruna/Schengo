@@ -35,6 +35,11 @@ function normalizeDate(date: Date): Date {
   return normalized
 }
 
+/**
+ * Calculates days used within a rolling 180-day window ending on the reference date.
+ * The window includes the reference date and the 179 days before it (180 days total).
+ * Uses a Set to automatically handle overlapping stays without double-counting.
+ */
 function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
   const mergedStays = mergeStays(stays)
   
@@ -51,6 +56,7 @@ function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
     const stayEntry = normalizeDate(stay.entry)
     const stayExit = normalizeDate(stay.exit)
     
+    // Only count the portion of the stay that falls within the 180-day window
     const stayStart = stayEntry > windowStart ? stayEntry : windowStart
     const stayEnd = stayExit < refDate ? stayExit : refDate
     
@@ -63,6 +69,11 @@ function calculateDaysUsed(stays: Stay[], referenceDate: Date): number {
   return usedDays.size
 }
 
+/**
+ * Merges overlapping or adjacent stays to prevent double-counting days.
+ * Two stays are considered adjacent if the next stay starts on or before
+ * the day after the current stay ends (e.g., Jan 1-5 and Jan 6-10 merge into Jan 1-10).
+ */
 function mergeStays(stays: Stay[]): Stay[] {
   if (stays.length === 0) return []
   
@@ -83,7 +94,7 @@ function mergeStays(stays: Stay[]): Stay[] {
     nextDay.setDate(nextDay.getDate() + 1)
     
     if (next.entry! <= nextDay) {
-      // Merge stays
+      // Merge stays by extending the exit date if needed
       if (next.exit! > current.exit!) {
         current.exit = next.exit
       }
@@ -98,6 +109,11 @@ function mergeStays(stays: Stay[]): Stay[] {
   return merged
 }
 
+/**
+ * Finds the latest safe exit date by simulating day-by-day forward from entry.
+ * Tests each day to see if staying until that day would exceed the 90-day limit.
+ * Returns the last day before the limit would be exceeded, or entry + 89 days if full 90 days are available.
+ */
 function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
   const mergedStays = mergeStays(stays)
   const normalizedEntry = normalizeDate(entryDate)
@@ -110,16 +126,27 @@ function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
     const daysUsed = calculateDaysUsed(mergedStays, testDate)
     
     if (daysUsed >= 90) {
+      // This day would exceed the limit, so the previous day was the last safe day
       testDate.setDate(testDate.getDate() - 1)
       return toISODate(testDate)
     }
   }
   
+  // Can stay the full 90 days
   const maxExit = new Date(normalizedEntry)
   maxExit.setDate(maxExit.getDate() + 89) // 90 days inclusive
   return toISODate(maxExit)
 }
 
+/**
+ * Main calculation function for Schengen status.
+ * 
+ * The "Days Left" value shown depends on context:
+ * - If exit date provided: shows days remaining AFTER the planned trip
+ * - If no exit date: shows days remaining ON the planned entry date
+ * 
+ * This ensures users see the most relevant information for their situation.
+ */
 export function calculateSchengenStatus(
   pastStays: Stay[],
   plannedEntry: Date | null,
@@ -151,8 +178,10 @@ export function calculateSchengenStatus(
   let daysLeftToShow: number
   
   if (plannedExit) {
+    // User provided exit date - check if trip is valid and show days after trip
     const normalizedPlannedExit = normalizeDate(plannedExit)
     
+    // Include the planned trip in calculation to check if it would exceed limit
     const staysWithPlannedTrip = [
       ...pastStays.filter(stay => stay.entry && stay.exit),
       { entry: normalizedPlannedEntry, exit: normalizedPlannedExit }
@@ -163,6 +192,7 @@ export function calculateSchengenStatus(
     daysRemainingAfterTrip = Math.max(0, 90 - daysUsedOnExit)
     daysLeftToShow = daysRemainingAfterTrip
   } else {
+    // No exit date - show days available on entry date and provide latest safe exit
     requiredExitDate = latestSafeExit
     daysLeftToShow = daysRemainingOnEntry
   }
