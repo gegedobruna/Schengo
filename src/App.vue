@@ -65,7 +65,10 @@
               :time-picker="false"
               :teleport="true"
               :auto-position="true"
+              :class="{ 'error-border': pastEntryErrors[index]?.entry }"
+              @update:model-value="validateAllPastEntries"
             />
+            <p v-if="pastEntryErrors[index]?.entry" class="text-red-500 text-sm mt-1">{{ pastEntryErrors[index].entry }}</p>
           </div>
           <div class="flex-1">
             <label class="label">{{ t('exitDate') }}</label>
@@ -77,7 +80,10 @@
               :time-picker="false"
               :teleport="true"
               :auto-position="true"
+              :class="{ 'error-border': pastEntryErrors[index]?.exit }"
+              @update:model-value="validateAllPastEntries"
             />
+            <p v-if="pastEntryErrors[index]?.exit" class="text-red-500 text-sm mt-1">{{ pastEntryErrors[index].exit }}</p>
           </div>
           <div class="flex items-center">
             <button 
@@ -120,7 +126,10 @@
               :time-picker="false"
               :teleport="true"
               :auto-position="true"
+              :class="{ 'error-border': plannedTripErrors.entry }"
+              @update:model-value="validatePlannedTripDates"
             />
+            <p v-if="plannedTripErrors.entry" class="text-red-500 text-sm mt-1">{{ plannedTripErrors.entry }}</p>
           </div>
           <div>
             <label class="label">{{ t('plannedExitDate') }}</label>
@@ -132,7 +141,10 @@
               :time-picker="false"
               :teleport="true"
               :auto-position="true"
+              :class="{ 'error-border': plannedTripErrors.exit }"
+              @update:model-value="validatePlannedTripDates"
             />
+            <p v-if="plannedTripErrors.exit" class="text-red-500 text-sm mt-1">{{ plannedTripErrors.exit }}</p>
           </div>
         </div>
         
@@ -205,24 +217,30 @@
               <VueDatePicker 
                 v-model="entry.entry" 
                 :format="'dd MMMM yyyy'"
-              :format-locale="datePickerLocale"
+                :format-locale="datePickerLocale"
                 :enable-time-picker="false"
                 :time-picker="false"
                 :teleport="true"
                 :auto-position="true"
+                :class="{ 'error-border': insidePastEntryErrors[index]?.entry }"
+                @update:model-value="validateAllInsidePastEntries"
               />
+              <p v-if="insidePastEntryErrors[index]?.entry" class="text-red-500 text-sm mt-1">{{ insidePastEntryErrors[index].entry }}</p>
             </div>
             <div class="flex-1">
               <label class="label">{{ t('exitDate') }}</label>
               <VueDatePicker 
                 v-model="entry.exit" 
                 :format="'dd MMMM yyyy'"
-              :format-locale="datePickerLocale"
+                :format-locale="datePickerLocale"
                 :enable-time-picker="false"
                 :time-picker="false"
                 :teleport="true"
                 :auto-position="true"
+                :class="{ 'error-border': insidePastEntryErrors[index]?.exit }"
+                @update:model-value="validateAllInsidePastEntries"
               />
+              <p v-if="insidePastEntryErrors[index]?.exit" class="text-red-500 text-sm mt-1">{{ insidePastEntryErrors[index].exit }}</p>
             </div>
             <div class="flex items-center">
               <button 
@@ -260,12 +278,15 @@
               <VueDatePicker 
                 v-model="lastEntryDate" 
                 :format="'dd MMMM yyyy'"
-              :format-locale="datePickerLocale"
+                :format-locale="datePickerLocale"
                 :enable-time-picker="false"
                 :time-picker="false"
                 :teleport="true"
                 :auto-position="true"
+                :class="{ 'error-border': lastEntryErrors }"
+                @update:model-value="validateLastEntryDate"
               />
+              <p v-if="lastEntryErrors" class="text-red-500 text-sm mt-1">{{ lastEntryErrors }}</p>
             </div>
           </div>
           
@@ -369,18 +390,136 @@ const removeInsideEntry = (index: number) => {
   }
 }
 
-const calculate = () => {
+// Validation functions
+const validatePastEntry = (stay: Stay): string[] => {
+  const errors: string[] = []
+  const today = new Date()
+  today.setHours(23, 59, 59, 999) // End of today
+  
+  // If one date is provided, the other must be provided
+  if ((stay.entry && !stay.exit) || (!stay.entry && stay.exit)) {
+    errors.push(t('bothDatesRequired'))
+    return errors
+  }
+  
+  if (stay.entry && stay.exit) {
+    // Entry date cannot be after exit date
+    if (stay.entry > stay.exit) {
+      errors.push(t('entryAfterExit'))
+    }
+    
+    // Past entry date cannot be in the future
+    if (stay.entry > today) {
+      errors.push(t('pastEntryFuture'))
+    }
+    
+    // Past exit date cannot be in the future
+    if (stay.exit > today) {
+      errors.push(t('pastExitFuture'))
+    }
+  }
+  
+  return errors
+}
+
+const validatePlannedTrip = (): string[] => {
+  const errors: string[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const twoYearsAgo = new Date(today)
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+  
   if (!plannedEntry.value) {
-    alert(t('pleaseEnterPlannedEntry'))
+    errors.push(t('pleaseEnterPlannedEntry'))
+    return errors
+  }
+  
+  // Planned entry cannot be more than 2 years in the past
+  if (plannedEntry.value < twoYearsAgo) {
+    errors.push(t('plannedEntryTooPast'))
+  }
+  
+  // If exit date is provided, it must be after entry date
+  if (plannedExit.value && plannedEntry.value > plannedExit.value) {
+    errors.push(t('entryAfterExit'))
+  }
+  
+  return errors
+}
+
+const validateLastEntry = (): string[] => {
+  const errors: string[] = []
+  const today = new Date()
+  today.setHours(23, 59, 59, 999)
+  const tenYearsAgo = new Date(today)
+  tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10)
+  
+  if (!lastEntryDate.value) {
+    errors.push(t('pleaseEnterLastEntry'))
+    return errors
+  }
+  
+  // Last entry cannot be in the future
+  if (lastEntryDate.value > today) {
+    errors.push(t('lastEntryFuture'))
+  }
+  
+  // Last entry cannot be more than 10 years in the past
+  if (lastEntryDate.value < tenYearsAgo) {
+    errors.push(t('lastEntryTooPast'))
+  }
+  
+  return errors
+}
+
+// Error state tracking
+const pastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({})
+const plannedTripErrors = ref<{ entry?: string, exit?: string }>({})
+const lastEntryErrors = ref<string>('')
+
+// Validation watchers
+const validateAllPastEntries = () => {
+  const newErrors: Record<number, { entry?: string, exit?: string }> = {}
+  pastEntries.value.forEach((stay, index) => {
+    const errors = validatePastEntry(stay)
+    if (errors.length > 0) {
+      newErrors[index] = {
+        entry: errors.find(e => e.includes('entry') || e.includes('Entry')) || errors[0],
+        exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+      }
+    }
+  })
+  pastEntryErrors.value = newErrors
+}
+
+const validatePlannedTripDates = () => {
+  const errors = validatePlannedTrip()
+  plannedTripErrors.value = {
+    entry: errors.find(e => e.includes('entry') || e.includes('Entry') || e.includes('planned')) || errors[0],
+    exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+  }
+}
+
+const validateLastEntryDate = () => {
+  const errors = validateLastEntry()
+  lastEntryErrors.value = errors[0] || ''
+}
+
+const calculate = () => {
+  // Validate all past entries
+  validateAllPastEntries()
+  const hasPastErrors = Object.keys(pastEntryErrors.value).length > 0
+  if (hasPastErrors) {
+    const firstError = Object.values(pastEntryErrors.value)[0]
+    alert(firstError.entry || firstError.exit || t('bothDatesRequired'))
     return
   }
   
-  // Prevent calculation if any past entry or exit date is missing
-  for (const [i, stay] of pastEntries.value.entries()) {
-    if ((stay.entry && !stay.exit) || (!stay.entry && stay.exit)) {
-      alert(`${t('completeBothDates')}${i + 1}.`)
-      return
-    }
+  // Validate planned trip
+  validatePlannedTripDates()
+  if (plannedTripErrors.value.entry || plannedTripErrors.value.exit) {
+    alert(plannedTripErrors.value.entry || plannedTripErrors.value.exit || t('pleaseEnterPlannedEntry'))
+    return
   }
 
   // Filter out completely empty rows - only include stays with both dates
@@ -415,18 +554,38 @@ const plannedTripData = computed(() => {
   return null
 })
 
+// Inside mode validation
+const insidePastEntryErrors = ref<Record<number, { entry?: string, exit?: string }>>({})
+
+const validateAllInsidePastEntries = () => {
+  const newErrors: Record<number, { entry?: string, exit?: string }> = {}
+  insidePastEntries.value.forEach((stay, index) => {
+    const errors = validatePastEntry(stay)
+    if (errors.length > 0) {
+      newErrors[index] = {
+        entry: errors.find(e => e.includes('entry') || e.includes('Entry')) || errors[0],
+        exit: errors.find(e => e.includes('exit') || e.includes('Exit')) || errors[0]
+      }
+    }
+  })
+  insidePastEntryErrors.value = newErrors
+}
+
 const calculateInside = () => {
-  if (!lastEntryDate.value) {
-    alert(t('pleaseEnterLastEntry'))
+  // Validate all past entries
+  validateAllInsidePastEntries()
+  const hasPastErrors = Object.keys(insidePastEntryErrors.value).length > 0
+  if (hasPastErrors) {
+    const firstError = Object.values(insidePastEntryErrors.value)[0]
+    alert(firstError.entry || firstError.exit || t('bothDatesRequired'))
     return
   }
   
-  // Prevent calculation if any past entry or exit date is missing
-  for (const [i, stay] of insidePastEntries.value.entries()) {
-    if ((stay.entry && !stay.exit) || (!stay.entry && stay.exit)) {
-      alert(`${t('completeBothDates')}${i + 1}.`)
-      return
-    }
+  // Validate last entry date
+  validateLastEntryDate()
+  if (lastEntryErrors.value) {
+    alert(lastEntryErrors.value)
+    return
   }
 
   // Filter out completely empty rows - only include stays with both dates
@@ -435,7 +594,7 @@ const calculateInside = () => {
   // Add current stay (from last entry date to today)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const normalizedLastEntry = new Date(lastEntryDate.value)
+  const normalizedLastEntry = new Date(lastEntryDate.value!)
   normalizedLastEntry.setHours(0, 0, 0, 0)
   
   // Include current stay in calculation

@@ -30,6 +30,14 @@ export const translations = {
     pleaseEnterPlannedEntry: 'Please enter a planned entry date',
     pleaseEnterLastEntry: 'Please enter your last entry date',
     completeBothDates: 'Please complete both entry and exit dates for past stay #',
+    entryAfterExit: 'Entry date cannot be after exit date',
+    exitBeforeEntry: 'Exit date cannot be before entry date',
+    bothDatesRequired: 'Both entry and exit dates are required',
+    pastEntryFuture: 'Past entry date cannot be in the future',
+    pastExitFuture: 'Past exit date cannot be in the future',
+    plannedEntryTooPast: 'Planned entry date cannot be more than 2 years in the past',
+    lastEntryFuture: 'Last entry date cannot be in the future',
+    lastEntryTooPast: 'Last entry date cannot be more than 10 years in the past',
   },
   sq: {
     planningTrip: 'Duke Planifikuar një Udhëtim',
@@ -58,6 +66,14 @@ export const translations = {
     pleaseEnterPlannedEntry: 'Ju lutem shkruani datën e planifikuar të hyrjes',
     pleaseEnterLastEntry: 'Ju lutem shkruani datën tuaj të fundit të hyrjes',
     completeBothDates: 'Ju lutem plotësoni të dyja datat e hyrjes dhe daljes për qëndrimin e kaluar #',
+    entryAfterExit: 'Data e hyrjes nuk mund të jetë pas datës së daljes',
+    exitBeforeEntry: 'Data e daljes nuk mund të jetë para datës së hyrjes',
+    bothDatesRequired: 'Të dyja datat e hyrjes dhe daljes janë të nevojshme',
+    pastEntryFuture: 'Data e hyrjes së kaluar nuk mund të jetë në të ardhmen',
+    pastExitFuture: 'Data e daljes së kaluar nuk mund të jetë në të ardhmen',
+    plannedEntryTooPast: 'Data e planifikuar e hyrjes nuk mund të jetë më shumë se 2 vjet në të kaluarën',
+    lastEntryFuture: 'Data e fundit e hyrjes nuk mund të jetë në të ardhmen',
+    lastEntryTooPast: 'Data e fundit e hyrjes nuk mund të jetë më shumë se 10 vjet në të kaluarën',
   }
 }
 
