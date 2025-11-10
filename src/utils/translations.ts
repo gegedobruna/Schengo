@@ -38,6 +38,11 @@ export const translations = {
     plannedEntryTooPast: 'Planned entry date cannot be more than 2 years in the past',
     lastEntryFuture: 'Last entry date cannot be in the future',
     lastEntryTooPast: 'Last entry date cannot be more than 10 years in the past',
+    welcomeTitle: 'Welcome to Schengen Planner',
+    welcomeDescription: 'Plan your travels with confidence. Calculate your remaining Schengen days using the 90/180 day rule. Track your past entries and plan future trips to stay compliant with Schengen visa regulations.',
+    welcomeGetStarted: 'Get Started',
+    welcomeDismiss: 'Dismiss',
+    footerText: '© 2025 Schengen Planner. Plan your travels with confidence.',
   },
   sq: {
     planningTrip: 'Duke Planifikuar një Udhëtim',
@@ -74,6 +79,11 @@ export const translations = {
     plannedEntryTooPast: 'Data e planifikuar e hyrjes nuk mund të jetë më shumë se 2 vjet në të kaluarën',
     lastEntryFuture: 'Data e fundit e hyrjes nuk mund të jetë në të ardhmen',
     lastEntryTooPast: 'Data e fundit e hyrjes nuk mund të jetë më shumë se 10 vjet në të kaluarën',
+    welcomeTitle: 'Mirë se vini në Planifikuesin e Schengen',
+    welcomeDescription: 'Planifikoni udhëtimet tuaja me besim. Llogaritni ditët tuaja të mbetura në Schengen duke përdorur rregullin 90/180 ditë. Ndiqni hyrjet tuaja të kaluara dhe planifikoni udhëtimet e ardhshme për të qëndruar në përputhje me rregullat e vizës së Schengen.',
+    welcomeGetStarted: 'Filloni',
+    welcomeDismiss: 'Mbyll',
+    footerText: '© 2025 Planifikuesi i Schengen. Planifikoni udhëtimet tuaja me besim.',
   }
 }
 

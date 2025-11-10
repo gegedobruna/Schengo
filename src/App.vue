@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-6 md:p-8 relative">
+  <div class="min-h-screen p-6 md:p-8 relative flex flex-col">
     <!-- Language Toggle Button -->
     <button
       @click="setLanguage(language === 'en' ? 'sq' : 'en')"
@@ -9,7 +9,30 @@
     >
       {{ language === 'en' ? 'SQ' : 'EN' }}
     </button>
-    <div class="max-w-4xl mx-auto space-y-8">
+    
+    <!-- Welcome Screen -->
+    <div v-if="showWelcome" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="card max-w-2xl w-full">
+        <div class="card-header">
+          <h2 class="card-title text-2xl">{{ t('welcomeTitle') }}</h2>
+        </div>
+        <div class="p-6">
+          <p class="text-gray-700 mb-6 leading-relaxed">
+            {{ t('welcomeDescription') }}
+          </p>
+          <div class="flex gap-4 justify-end">
+            <button
+              @click="dismissWelcome"
+              class="btn-transparent-primary"
+            >
+              {{ t('welcomeGetStarted') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="max-w-4xl mx-auto space-y-8 flex-1">
       <div class="text-center mb-4">
         <img 
           :src="logoImage" 
@@ -328,6 +351,13 @@
         </div>
       </div>
     </div>
+    
+    <!-- Footer -->
+    <footer class="mt-12 pt-8 border-t border-white/20 text-center">
+      <p class="text-gray-600 text-sm">
+        {{ t('footerText') }}
+      </p>
+    </footer>
   </div>
 </template>
 
@@ -348,6 +378,22 @@ const datePickerLocale = computed(() => {
   return language.value === 'sq' ? sqLocale : enUS
 })
 const mode = ref<'planning' | 'inside'>('planning')
+
+// Welcome screen state
+const showWelcome = ref(false)
+
+// Check if welcome was dismissed before
+if (typeof window !== 'undefined') {
+  const welcomeDismissed = localStorage.getItem('schengo-welcome-dismissed')
+  showWelcome.value = welcomeDismissed !== 'true'
+}
+
+const dismissWelcome = () => {
+  showWelcome.value = false
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('schengo-welcome-dismissed', 'true')
+  }
+}
 
 // Planning mode state
 const pastEntries = ref<Stay[]>([
