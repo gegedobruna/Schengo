@@ -1,0 +1,88 @@
+import { ref } from 'vue'
+
+export type Language = 'en' | 'sq'
+
+export const translations = {
+  en: {
+    planningTrip: 'Planning a Trip',
+    alreadyInside: 'Already Inside',
+    pastSchengenEntries: 'Past Schengen Entries',
+    entryDate: 'Entry Date',
+    exitDate: 'Exit Date',
+    addEntry: 'Add Entry',
+    tripPlanning: 'Trip Planning',
+    plannedEntryDate: 'Planned Entry Date *',
+    plannedExitDate: 'Planned Exit Date (Optional)',
+    calculate: 'Calculate',
+    results: 'Results',
+    daysLeftInEU: 'Days Left in EU',
+    tripStatus: 'Trip Status',
+    valid: 'VALID',
+    invalid: 'INVALID',
+    daysUsedOnEntry: 'Days used on entry:',
+    daysRemainingOnEntry: 'Days remaining on entry:',
+    latestSafeExit: 'Latest safe exit:',
+    requiredExitDate: 'Required exit date:',
+    daysRemainingAfterTrip: 'Days remaining after trip:',
+    currentStay: 'Current Stay',
+    lastEntryDate: 'Last Entry Date *',
+    daysUsed: 'Days Used',
+    pleaseEnterPlannedEntry: 'Please enter a planned entry date',
+    pleaseEnterLastEntry: 'Please enter your last entry date',
+    completeBothDates: 'Please complete both entry and exit dates for past stay #',
+  },
+  sq: {
+    planningTrip: 'Duke Planifikuar një Udhëtim',
+    alreadyInside: 'Tashmë Brenda',
+    pastSchengenEntries: 'Hyrjet e Kaluara në Schengen',
+    entryDate: 'Data e Hyrjes',
+    exitDate: 'Data e Daljes',
+    addEntry: 'Shto Hyrje',
+    tripPlanning: 'Planifikimi i Udhëtimit',
+    plannedEntryDate: 'Data e Planifikuar e Hyrjes *',
+    plannedExitDate: 'Data e Planifikuar e Daljes (Opsionale)',
+    calculate: 'Llogarit',
+    results: 'Rezultatet',
+    daysLeftInEU: 'Ditët e Mbetura në BE',
+    tripStatus: 'Statusi i Udhëtimit',
+    valid: 'I VLEFSHËM',
+    invalid: 'I PAVLEFSHËM',
+    daysUsedOnEntry: 'Ditët e përdorura në hyrje:',
+    daysRemainingOnEntry: 'Ditët e mbetura në hyrje:',
+    latestSafeExit: 'Dalja më e sigurt:',
+    requiredExitDate: 'Data e kërkuar e daljes:',
+    daysRemainingAfterTrip: 'Ditët e mbetura pas udhëtimit:',
+    currentStay: 'Qëndrimi Aktual',
+    lastEntryDate: 'Data e Fundit e Hyrjes *',
+    daysUsed: 'Ditët e Përdorura',
+    pleaseEnterPlannedEntry: 'Ju lutem shkruani datën e planifikuar të hyrjes',
+    pleaseEnterLastEntry: 'Ju lutem shkruani datën tuaj të fundit të hyrjes',
+    completeBothDates: 'Ju lutem plotësoni të dyja datat e hyrjes dhe daljes për qëndrimin e kaluar #',
+  }
+}
+
+export function useTranslations() {
+  const language = ref<Language>('en')
+  
+  // Load from localStorage
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('schengo-language')
+    if (saved === 'sq' || saved === 'en') {
+      language.value = saved
+    }
+  }
+  
+  const t = (key: keyof typeof translations.en): string => {
+    return translations[language.value][key] || key
+  }
+  
+  const setLanguage = (lang: Language) => {
+    language.value = lang
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('schengo-language', lang)
+    }
+  }
+  
+  return { language, t, setLanguage }
+}
+
