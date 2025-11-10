@@ -59,7 +59,8 @@
             <label class="label">{{ t('entryDate') }}</label>
             <VueDatePicker 
               v-model="entry.entry" 
-              :format="'dd-MM-yyyy'"
+              :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
               :enable-time-picker="false"
               :time-picker="false"
               :teleport="true"
@@ -70,7 +71,8 @@
             <label class="label">{{ t('exitDate') }}</label>
             <VueDatePicker 
               v-model="entry.exit" 
-              :format="'dd-MM-yyyy'"
+              :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
               :enable-time-picker="false"
               :time-picker="false"
               :teleport="true"
@@ -112,7 +114,8 @@
             <label class="label">{{ t('plannedEntryDate') }}</label>
             <VueDatePicker 
               v-model="plannedEntry" 
-              :format="'dd-MM-yyyy'"
+              :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
               :enable-time-picker="false"
               :time-picker="false"
               :teleport="true"
@@ -123,7 +126,8 @@
             <label class="label">{{ t('plannedExitDate') }}</label>
             <VueDatePicker 
               v-model="plannedExit" 
-              :format="'dd-MM-yyyy'"
+              :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
               :enable-time-picker="false"
               :time-picker="false"
               :teleport="true"
@@ -167,9 +171,9 @@
         <div class="mt-6 p-4 glass-effect rounded-xl space-y-2 text-sm transition-all duration-300 hover:bg-white/80">
           <p class="text-gray-700"><span class="font-semibold text-cerulean-600">{{ t('daysUsedOnEntry') }}</span> {{ results.daysUsedOnEntry }}</p>
           <p class="text-gray-700"><span class="font-semibold text-blue-munsell-600">{{ t('daysRemainingOnEntry') }}</span> {{ results.daysRemainingOnEntry }}</p>
-          <p class="text-gray-700"><span class="font-semibold text-gray-800">{{ t('latestSafeExit') }}</span> {{ formatDate(new Date(results.latestSafeExit)) }}</p>
+          <p class="text-gray-700"><span class="font-semibold text-gray-800">{{ t('latestSafeExit') }}</span> {{ formatDate(new Date(results.latestSafeExit), language) }}</p>
           <p v-if="results.requiredExitDate" class="font-semibold text-cerulean-600">
-            {{ t('requiredExitDate') }} {{ formatDate(new Date(results.requiredExitDate)) }}
+            {{ t('requiredExitDate') }} {{ formatDate(new Date(results.requiredExitDate), language) }}
           </p>
           <p v-if="results.daysRemainingAfterTrip !== undefined" class="font-semibold text-green-600">
             {{ t('daysRemainingAfterTrip') }} {{ results.daysRemainingAfterTrip }}
@@ -200,7 +204,8 @@
               <label class="label">{{ t('entryDate') }}</label>
               <VueDatePicker 
                 v-model="entry.entry" 
-                :format="'dd-MM-yyyy'"
+                :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
                 :enable-time-picker="false"
                 :time-picker="false"
                 :teleport="true"
@@ -211,7 +216,8 @@
               <label class="label">{{ t('exitDate') }}</label>
               <VueDatePicker 
                 v-model="entry.exit" 
-                :format="'dd-MM-yyyy'"
+                :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
                 :enable-time-picker="false"
                 :time-picker="false"
                 :teleport="true"
@@ -253,7 +259,8 @@
               <label class="label">{{ t('lastEntryDate') }}</label>
               <VueDatePicker 
                 v-model="lastEntryDate" 
-                :format="'dd-MM-yyyy'"
+                :format="'dd MMMM yyyy'"
+              :format-locale="datePickerLocale"
                 :enable-time-picker="false"
                 :time-picker="false"
                 :teleport="true"
@@ -295,7 +302,7 @@
         </div>
         
         <div class="mt-6 p-4 glass-effect rounded-xl space-y-2 text-sm transition-all duration-300 hover:bg-white/80">
-          <p class="text-gray-700"><span class="font-semibold text-cerulean-600">{{ t('latestSafeExit') }}</span> {{ formatDate(new Date(insideResults.latestSafeExit)) }}</p>
+          <p class="text-gray-700"><span class="font-semibold text-cerulean-600">{{ t('latestSafeExit') }}</span> {{ formatDate(new Date(insideResults.latestSafeExit), language) }}</p>
         </div>
         </div>
       </div>
@@ -307,12 +314,18 @@
 import { ref, computed } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
+import { enUS, sq as sqLocale } from 'date-fns/locale'
 import { calculateSchengenStatus, formatDate, type Stay, type CalculationResult } from './utils/schengen'
 import TimelineVisualizer from './components/TimelineVisualizer.vue'
 import logoImage from './utils/background/logo.webp'
 import { useTranslations } from './utils/translations'
 
 const { language, t, setLanguage } = useTranslations()
+
+// Computed locale for date picker
+const datePickerLocale = computed(() => {
+  return language.value === 'sq' ? sqLocale : enUS
+})
 const mode = ref<'planning' | 'inside'>('planning')
 
 // Planning mode state

@@ -295,8 +295,13 @@
   }
 }
 
+/* ============================================
+   DATEPICKER CSS - COMMENTED OUT FOR TESTING
+   ============================================ */
+
 /* Date Picker Z-Index Fix - Must be at body level, not scoped */
 /* Target all possible date picker menu classes - ensure high z-index regardless of position */
+/*
 .dp__menu,
 .dp__calendar_wrap,
 .dp__calendar,
@@ -307,6 +312,66 @@
 [class*="dp__menu"],
 [class^="dp__menu"] {
   z-index: 10000 !important;
+  isolation: auto !important;
+}
+
+/* MONTH/YEAR DROPDOWN FIX - Make it work properly with solid background */
+/* Target the dropdown list container - it's usually a direct child div */
+.dp__month_year_select_year > div:not([role]),
+.dp__month_year_select_month > div:not([role]),
+.dp__month_year_select_year ul,
+.dp__month_year_select_month ul {
+  position: absolute !important;
+  z-index: 99999 !important;
+  background: #ffffff !important;
+  border: 3px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 12px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+/* Add a backdrop overlay when dropdown is open */
+.dp__menu:has(.dp__month_year_select_year[aria-expanded="true"])::before,
+.dp__menu:has(.dp__month_year_select_month[aria-expanded="true"])::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 99998;
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+/* When dropdown is expanded, disable and dim calendar */
+.dp__month_year_select_year[aria-expanded="true"] ~ .dp__calendar,
+.dp__month_year_select_month[aria-expanded="true"] ~ .dp__calendar,
+.dp__menu:has(.dp__month_year_select_year[aria-expanded="true"]) .dp__calendar,
+.dp__menu:has(.dp__month_year_select_month[aria-expanded="true"]) .dp__calendar {
+  pointer-events: none !important;
+  opacity: 0.2 !important;
+  filter: blur(2px) !important;
+  z-index: 1 !important;
+}
+
+.dp__menu:has(.dp__month_year_select_year[aria-expanded="true"]) .dp__calendar *,
+.dp__menu:has(.dp__month_year_select_month[aria-expanded="true"]) .dp__calendar * {
+  pointer-events: none !important;
+}
+
+/* Ensure dropdown items are visible and clickable */
+.dp__month_year_select_year[aria-expanded="true"] li,
+.dp__month_year_select_month[aria-expanded="true"] li,
+.dp__month_year_select_year[aria-expanded="true"] button,
+.dp__month_year_select_month[aria-expanded="true"] button {
+  z-index: 100000 !important;
+  position: relative !important;
+  background: transparent !important;
 }
 
 /* Also target any nested menu containers */
@@ -360,14 +425,11 @@ body > [class*="dp__menu"],
 /* Global fix: Ensure date picker always appears above everything */
 /* This targets the date picker regardless of where it's positioned in the DOM */
 * {
-  /* Prevent any element from trapping the date picker */
 }
 
 /* Specifically ensure cards and glass effects don't create stacking contexts that trap date picker */
 .card,
 .glass-effect {
-  /* These already have backdrop-filter which creates stacking context */
-  /* But we ensure date picker escapes by using teleport */
 }
 
 /* Additional fix: Target date picker when it's inside any container */

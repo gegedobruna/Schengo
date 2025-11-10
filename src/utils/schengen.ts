@@ -217,12 +217,21 @@ export function calculateSchengenStatus(
   }
 }
 
-// Format date for display (dd-MM-yyyy)
-export function formatDate(date: Date): string {
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+// Format date for display (11 April 2025 or 11 Prill 2025)
+export function formatDate(date: Date, locale: string = 'en'): string {
+  const day = date.getDate()
   const year = date.getFullYear()
-  return `${day}-${month}-${year}`
+  
+  const monthNames = {
+    en: ['January', 'February', 'March', 'April', 'May', 'June', 
+         'July', 'August', 'September', 'October', 'November', 'December'],
+    sq: ['Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor',
+         'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor']
+  }
+  
+  const monthName = monthNames[locale as keyof typeof monthNames]?.[date.getMonth()] || monthNames.en[date.getMonth()]
+  
+  return `${day} ${monthName} ${year}`
 }
 
 // Parse date from dd-MM-yyyy format
