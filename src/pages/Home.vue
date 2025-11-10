@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-schengen-50 to-primary-50">
+  <div class="min-h-screen">
     <div class="container mx-auto px-4 py-8">
       <div class="max-w-4xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-12">
-          <h1 class="text-4xl font-bold text-gray-900 mb-4">
+          <h1 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
             Schengen 90/180 Planner
           </h1>
-          <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p class="text-xl text-white/90 max-w-2xl mx-auto drop-shadow">
             Plan your travels within the Schengen area while staying compliant with the 90/180 day rule.
             Track your stays, monitor your remaining days, and never worry about overstaying.
           </p>
@@ -71,7 +71,7 @@
         </div>
 
         <!-- Info Section -->
-        <div class="mt-16 bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div class="mt-16 card">
           <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">About the 90/180 Rule</h2>
           <div class="prose max-w-none">
             <p class="text-gray-600 mb-4">

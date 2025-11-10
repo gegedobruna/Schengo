@@ -35,18 +35,20 @@
     </div>
 
     <!-- Stays List -->
-    <div v-if="stays.length === 0" class="text-center py-12 bg-gray-50 rounded-lg">
-      <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <p class="text-gray-500 mb-4">No stays recorded yet</p>
+    <div v-if="stays.length === 0" class="text-center py-16 glass-effect rounded-xl">
+      <div class="w-20 h-20 bg-cerulean-500/80 rounded-xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border-2 border-white/30">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <p class="text-gray-700 font-semibold text-lg mb-6">No stays recorded yet</p>
       <button @click="addNewStay" class="btn btn-primary">
         Add Your First Stay
       </button>
     </div>
 
     <div v-else class="space-y-4">
-      <div v-for="(stay, index) in stays" :key="index" class="bg-white border border-gray-200 rounded-lg p-4">
+      <div v-for="(stay, index) in stays" :key="index" class="glass-effect rounded-xl p-6 transition-all duration-300 hover:bg-white/85 hover:scale-[1.01]">
         <div class="flex items-center justify-between">
           <div class="flex-1">
             <div class="grid md:grid-cols-3 gap-4">
@@ -127,21 +129,23 @@
     </div>
 
     <!-- Warning Message -->
-    <div v-if="warning" class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+    <div v-if="warning" class="glass-effect rounded-xl p-6 border-sandy-brown-300/50 transition-all duration-300 hover:bg-white/85">
       <div class="flex">
-        <svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-        </svg>
+        <div class="w-10 h-10 bg-sandy-brown-500/80 rounded-lg flex items-center justify-center mr-4 flex-shrink-0 backdrop-blur-sm border-2 border-white/30">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
         <div>
-          <h3 class="text-sm font-medium text-yellow-800">Warning</h3>
-          <p class="mt-1 text-sm text-yellow-700">{{ warning }}</p>
+          <h3 class="text-base font-bold text-sandy-brown-800 mb-1">Warning</h3>
+          <p class="text-sm text-sandy-brown-700 font-medium">{{ warning }}</p>
         </div>
       </div>
     </div>
 
     <!-- Bulk Import Modal -->
-    <div v-if="showBulkImport" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+    <div v-if="showBulkImport" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+      <div class="glass-effect rounded-xl p-6 w-full max-w-2xl shadow-2xl transition-all duration-300">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Bulk Import Stays</h3>
         <p class="text-sm text-gray-600 mb-4">
           Enter dates in format: YYYY-MM-DD → YYYY-MM-DD (one per line)

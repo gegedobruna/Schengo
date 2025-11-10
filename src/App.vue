@@ -1,35 +1,44 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-8">
-    <div class="max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold mb-8">Schengen Planner</h1>
+  <div class="min-h-screen p-6 md:p-8 relative">
+    <div class="max-w-4xl mx-auto space-y-8">
+      <div class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold mb-3 text-white drop-shadow-lg">Schengen Planner</h1>
+        <p class="text-white/90 text-lg drop-shadow">Plan your travels with confidence</p>
+      </div>
       
       <!-- Past Entries -->
-      <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Past Schengen Entries</h2>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Past Schengen Entries</h2>
+        </div>
         
-        <div v-for="(entry, index) in pastEntries" :key="index" class="flex gap-4 mb-4">
+        <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 p-4 glass-effect rounded-xl transition-all duration-300 hover:bg-white/80">
           <div class="flex-1">
-            <label class="block text-sm font-medium mb-1">Entry Date</label>
+            <label class="label">Entry Date</label>
             <VueDatePicker 
               v-model="entry.entry" 
               :format="'dd-MM-yyyy'"
               :enable-time-picker="false"
               :time-picker="false"
+              :teleport="true"
+              :auto-position="true"
             />
           </div>
           <div class="flex-1">
-            <label class="block text-sm font-medium mb-1">Exit Date</label>
+            <label class="label">Exit Date</label>
             <VueDatePicker 
               v-model="entry.exit" 
               :format="'dd-MM-yyyy'"
               :enable-time-picker="false"
               :time-picker="false"
+              :teleport="true"
+              :auto-position="true"
             />
           </div>
           <div class="flex items-end">
             <button 
               @click="removeEntry(index)" 
-              class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              class="btn btn-danger btn-sm"
               :disabled="pastEntries.length <= 1"
             >
               Remove
@@ -39,69 +48,83 @@
         
         <button 
           @click="addEntry" 
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          class="btn btn-primary w-full md:w-auto"
         >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
           Add Entry
         </button>
       </div>
       
       <!-- Trip Planning -->
-      <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Trip Planning</h2>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Trip Planning</h2>
+        </div>
         
-        <div class="flex gap-4 mb-4">
-          <div class="flex-1">
-            <label class="block text-sm font-medium mb-1">Planned Entry Date *</label>
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="label">Planned Entry Date *</label>
             <VueDatePicker 
               v-model="plannedEntry" 
               :format="'dd-MM-yyyy'"
               :enable-time-picker="false"
               :time-picker="false"
+              :teleport="true"
+              :auto-position="true"
             />
           </div>
-          <div class="flex-1">
-            <label class="block text-sm font-medium mb-1">Planned Exit Date (Optional)</label>
+          <div>
+            <label class="label">Planned Exit Date (Optional)</label>
             <VueDatePicker 
               v-model="plannedExit" 
               :format="'dd-MM-yyyy'"
               :enable-time-picker="false"
               :time-picker="false"
+              :teleport="true"
+              :auto-position="true"
             />
           </div>
         </div>
         
         <button 
           @click="calculate" 
-          class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          class="btn btn-success w-full md:w-auto"
         >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
           Calculate
         </button>
       </div>
       
       <!-- Results -->
-      <div v-if="results" class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-4">Results</h2>
+      <div v-if="results" class="card">
+        <div class="card-header">
+          <h2 class="card-title">Results</h2>
+        </div>
         
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <h3 class="font-medium">Days Left in EU</h3>
-            <p class="text-2xl font-bold" :class="results.daysLeft > 0 ? 'text-green-600' : 'text-red-600'">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
+            <h3 class="font-semibold text-gray-700 mb-2">Days Left in EU</h3>
+            <p class="text-4xl font-bold" :class="results.daysLeft > 0 ? 'text-green-600' : 'text-fire-brick-600'">
               {{ results.daysLeft }}
             </p>
           </div>
-          <div>
-            <h3 class="font-medium">Trip Status</h3>
-            <p class="text-2xl font-bold" :class="results.tripValid ? 'text-green-600' : 'text-red-600'">
+          <div class="p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
+            <h3 class="font-semibold text-gray-700 mb-2">Trip Status</h3>
+            <p class="text-4xl font-bold" :class="results.tripValid ? 'text-green-600' : 'text-fire-brick-600'">
               {{ results.tripValid ? 'VALID' : 'INVALID' }}
             </p>
           </div>
         </div>
         
-        <div class="mt-4 text-sm text-gray-600">
-          <p>Days used on entry: {{ results.daysUsedOnEntry }}</p>
-          <p>Days remaining on entry: {{ results.daysRemainingOnEntry }}</p>
-          <p>Latest safe exit: {{ formatDate(new Date(results.latestSafeExit)) }}</p>
-          <p v-if="results.requiredExitDate" class="font-semibold text-blue-600">
+        <div class="mt-6 p-4 glass-effect rounded-xl space-y-2 text-sm transition-all duration-300 hover:bg-white/80">
+          <p class="text-gray-700"><span class="font-semibold text-cerulean-600">Days used on entry:</span> {{ results.daysUsedOnEntry }}</p>
+          <p class="text-gray-700"><span class="font-semibold text-blue-munsell-600">Days remaining on entry:</span> {{ results.daysRemainingOnEntry }}</p>
+          <p class="text-gray-700"><span class="font-semibold text-gray-800">Latest safe exit:</span> {{ formatDate(new Date(results.latestSafeExit)) }}</p>
+          <p v-if="results.requiredExitDate" class="font-semibold text-cerulean-600">
             Required exit date: {{ formatDate(new Date(results.requiredExitDate)) }}
           </p>
           <p v-if="results.daysRemainingAfterTrip !== undefined" class="font-semibold text-green-600">
@@ -130,9 +153,6 @@ import { calculateSchengenStatus, formatDate, type Stay, type CalculationResult 
 import TimelineVisualizer from './components/TimelineVisualizer.vue'
 
 const pastEntries = ref<Stay[]>([
-  { entry: null, exit: null },
-  { entry: null, exit: null },
-  { entry: null, exit: null },
   { entry: null, exit: null }
 ])
 
@@ -156,22 +176,41 @@ const calculate = () => {
     return
   }
   
-  // Filter out entries with missing dates
-  const validStays = pastEntries.value.filter(stay => stay.entry && stay.exit)
-  
+  // Prevent calculation if any past entry or exit date is missing
+  for (const [i, stay] of pastEntries.value.entries()) {
+    if ((stay.entry && !stay.exit) || (!stay.entry && stay.exit)) {
+      alert(`Please complete both entry and exit dates for past stay #${i + 1}.`)
+      return
+    }
+  }
+
+  // Filter out completely empty rows - only include stays with both dates
+  const validStays = pastEntries.value.filter((stay: Stay) => stay.entry !== null && stay.exit !== null) as Stay[]
+
   results.value = calculateSchengenStatus(validStays, plannedEntry.value, plannedExit.value)
 }
 
 // Computed properties for timeline
 const validPastStays = computed(() => {
-  return pastEntries.value.filter(stay => stay.entry && stay.exit)
+  return pastEntries.value.filter((stay: Stay) => stay.entry !== null && stay.exit !== null)
 })
 
 const plannedTripData = computed(() => {
-  if (plannedEntry.value && plannedExit.value) {
-    return {
-      entry: plannedEntry.value,
-      exit: plannedExit.value
+  if (plannedEntry.value) {
+    if (plannedExit.value) {
+      // Exit date provided
+      return {
+        entry: plannedEntry.value,
+        exit: plannedExit.value,
+        hasExitDate: true
+      }
+    } else if (results.value) {
+      // No exit date, use latest safe exit
+      return {
+        entry: plannedEntry.value,
+        exit: new Date(results.value.latestSafeExit),
+        hasExitDate: false
+      }
     }
   }
   return null

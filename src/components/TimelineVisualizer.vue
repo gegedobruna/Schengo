@@ -42,12 +42,15 @@
           <!-- Planned trip timeline -->
           <div class="timeline-row">
             <div v-if="plannedTrip" 
-                 class="stay-bar planned-bar" 
+                 class="stay-bar" 
+                 :class="plannedTrip.hasExitDate !== false ? 'planned-bar' : 'planned-bar-estimated'"
                  :style="getStayBarStyle(plannedTrip, -1)">
               <div class="stay-tooltip">
                 <div class="stay-dates">{{ formatDateRange(plannedTrip.entry, plannedTrip.exit) }}</div>
                 <div class="stay-duration">{{ getDuration(plannedTrip.entry, plannedTrip.exit) }} days</div>
-                <div class="stay-label">PLANNED</div>
+                <div class="stay-label" :class="plannedTrip.hasExitDate !== false ? '' : 'estimated-label'">
+                  {{ plannedTrip.hasExitDate !== false ? 'PLANNED' : 'ESTIMATED (to latest safe exit)' }}
+                </div>
               </div>
             </div>
           </div>
@@ -75,6 +78,10 @@
           <span>Planned Trip</span>
         </div>
         <div class="legend-item">
+          <div class="legend-color estimated-color"></div>
+          <span>Estimated Trip (no exit date)</span>
+        </div>
+        <div class="legend-item">
           <div class="legend-color window-color"></div>
           <span>Rolling Window</span>
         </div>
@@ -94,7 +101,7 @@ interface Stay {
 
 interface Props {
   pastStays: Stay[]
-  plannedTrip?: { entry: Date; exit: Date } | null
+  plannedTrip?: { entry: Date; exit: Date; hasExitDate?: boolean } | null
   daysUsedInWindow: number
 }
 
@@ -154,7 +161,7 @@ const getStayColor = (index: number): string => {
   return colors[index % colors.length]
 }
 
-const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date }, index: number) => {
+const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date; hasExitDate?: boolean }, index: number) => {
   if (!stay.entry || !stay.exit) return {}
   
   const start = timelineRange.value.start
@@ -166,7 +173,14 @@ const getStayBarStyle = (stay: Stay | { entry: Date; exit: Date }, index: number
   const leftPercent = (stayStart / totalDays) * 100
   const widthPercent = (stayDuration / totalDays) * 100
   
-  const color = index === -1 ? '#8B5CF6' : getStayColor(index)
+  // Use different color for estimated trips (no exit date provided)
+  let color = '#8B5CF6' // Default planned color
+  if (index === -1) {
+    const hasExitDate = 'hasExitDate' in stay ? stay.hasExitDate !== false : true
+    color = hasExitDate ? '#8B5CF6' : '#F49E4C' // Sandy brown for estimated
+  } else {
+    color = getStayColor(index)
+  }
   
   return {
     left: `${leftPercent}%`,
@@ -220,7 +234,16 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 
 <style scoped>
 .timeline-container {
-  @apply bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl p-8 border border-gray-100;
+  @apply rounded-xl shadow-2xl p-8 border-2 border-white/30 transition-all duration-300;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.timeline-container:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
 .timeline-wrapper {
@@ -228,11 +251,8 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .timeline-header {
-  @apply text-center pb-6 border-b-2 border-gray-200;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  @apply text-center pb-6 border-b-2 border-white/40;
+  color: #2d728f;
 }
 
 .timeline-title {
@@ -244,9 +264,12 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .timeline-graph {
-  @apply flex bg-white rounded-lg shadow-inner p-4;
+  @apply flex rounded-lg p-4 transition-all duration-300;
   min-height: 220px;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .y-axis {
@@ -256,19 +279,24 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .y-label {
-  @apply text-sm font-semibold text-gray-700 px-3 py-2 rounded-lg;
+  @apply text-sm font-semibold text-gray-700 px-3 py-2 rounded-lg transition-all duration-300;
   height: 44px;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .timeline-content {
   @apply flex-1 relative;
   min-height: 220px;
-  background: linear-gradient(90deg, #fafbfc 0%, #ffffff 50%, #fafbfc 100%);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .timeline-grid {
@@ -322,6 +350,19 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
 }
 
+.planned-bar-estimated {
+  @apply border-2 border-sandy-brown-400;
+  border-style: dashed;
+  box-shadow: 0 4px 12px rgba(244, 158, 76, 0.3);
+  background: linear-gradient(135deg, #f49e4c 0%, #f5ee9e 100%);
+  opacity: 0.85;
+}
+
+.planned-bar-estimated:hover {
+  box-shadow: 0 6px 20px rgba(244, 158, 76, 0.4);
+  opacity: 1;
+}
+
 .rolling-window-bar {
   @apply absolute h-10 rounded-lg;
   top: 2px;
@@ -331,8 +372,12 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .stay-tooltip {
-  @apply bg-white rounded-lg shadow-xl p-3 text-xs;
+  @apply rounded-lg shadow-xl p-3 text-xs transition-all duration-300;
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   opacity: 0;
   transition: all 0.3s ease;
   pointer-events: none;
@@ -391,25 +436,29 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .timeline-legend {
-  @apply flex flex-wrap gap-6 justify-center mt-8 pt-6 border-t border-gray-200;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  @apply flex flex-wrap gap-6 justify-center mt-8 pt-6 border-t-2 border-white/40;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;
   padding: 20px;
 }
 
 .legend-item {
-  @apply flex items-center space-x-3 text-sm font-medium;
-  background: white;
+  @apply flex items-center space-x-3 text-sm font-medium transition-all duration-300;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 8px 16px;
   border-radius: 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .legend-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .legend-color {
@@ -422,6 +471,15 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 
 .planned-color {
   background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+}
+
+.estimated-color {
+  background: linear-gradient(135deg, #f49e4c 0%, #f5ee9e 100%);
+  border: 2px dashed #f49e4c;
+}
+
+.estimated-label {
+  @apply font-bold text-sandy-brown-600 uppercase text-xs tracking-wide;
 }
 
 .window-color {

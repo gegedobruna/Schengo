@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <!-- Stay Rows -->
     <div class="space-y-4">
-      <div v-for="(stay, index) in stays" :key="index" class="flex items-end gap-4 p-4 border border-gray-200 rounded-lg">
+      <div v-for="(stay, index) in stays" :key="index" class="flex items-end gap-4 p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85">
         <div class="flex-1">
           <label class="label">Entry Date</label>
           <input 
@@ -109,21 +109,23 @@
     </div>
 
     <!-- Warning Message -->
-    <div v-if="warning" class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+    <div v-if="warning" class="glass-effect rounded-xl p-6 border-sandy-brown-300/50 transition-all duration-300 hover:bg-white/85">
       <div class="flex">
-        <svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-        </svg>
+        <div class="w-10 h-10 bg-sandy-brown-500/80 rounded-lg flex items-center justify-center mr-4 flex-shrink-0 backdrop-blur-sm border-2 border-white/30">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
         <div>
-          <h3 class="text-sm font-medium text-yellow-800">Warning</h3>
-          <p class="mt-1 text-sm text-yellow-700">{{ warning }}</p>
+          <h3 class="text-base font-bold text-sandy-brown-800 mb-1">Warning</h3>
+          <p class="text-sm text-sandy-brown-700 font-medium">{{ warning }}</p>
         </div>
       </div>
     </div>
 
     <!-- Import Modal -->
-    <div v-if="showImportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <div v-if="showImportModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+      <div class="glass-effect rounded-xl p-6 w-full max-w-md shadow-2xl transition-all duration-300">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Import JSON</h3>
         <textarea 
           v-model="importText"
@@ -138,8 +140,8 @@
     </div>
 
     <!-- Bulk Import Modal -->
-    <div v-if="showBulkModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+    <div v-if="showBulkModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+      <div class="glass-effect rounded-xl p-6 w-full max-w-2xl shadow-2xl transition-all duration-300">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Bulk Import</h3>
         <p class="text-sm text-gray-600 mb-4">
           Enter dates in format: YYYY-MM-DD → YYYY-MM-DD (one per line)

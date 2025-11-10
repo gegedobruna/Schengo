@@ -4,29 +4,92 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Ubuntu', system-ui, sans-serif;
+    scroll-behavior: smooth;
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    background-image: url('./utils/background/background.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    @apply text-gray-900;
+  }
+
+  * {
+    @apply transition-all duration-300;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 border-2;
   }
   
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply btn text-white border-white/30;
+    background: rgba(45, 114, 143, 0.8);
+    backdrop-filter: blur(12px);
+  }
+  
+  .btn-primary:hover {
+    background: rgba(36, 91, 115, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 114, 143, 0.4);
+  }
+  
+  .btn-primary:focus {
+    --tw-ring-color: rgba(45, 114, 143, 0.5);
   }
   
   .btn-secondary {
-    @apply btn bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500;
+    @apply btn text-gray-800 border-white/30;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+  }
+  
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-secondary:focus {
+    --tw-ring-color: rgba(156, 163, 175, 0.5);
   }
   
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    @apply btn text-white border-white/30;
+    background: rgba(171, 52, 40, 0.8);
+    backdrop-filter: blur(12px);
+  }
+  
+  .btn-danger:hover {
+    background: rgba(137, 42, 32, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(171, 52, 40, 0.4);
+  }
+  
+  .btn-danger:focus {
+    --tw-ring-color: rgba(171, 52, 40, 0.5);
+  }
+  
+  .btn-success {
+    @apply btn text-white border-white/30;
+    background: rgba(16, 185, 129, 0.8);
+    backdrop-filter: blur(12px);
+  }
+  
+  .btn-success:hover {
+    background: rgba(5, 150, 105, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
+  
+  .btn-success:focus {
+    --tw-ring-color: rgba(16, 185, 129, 0.5);
   }
   
   .btn-sm {
@@ -38,11 +101,28 @@
   }
   
   .input {
-    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm;
+    @apply block w-full px-4 py-3 border-2 border-white/30 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 sm:text-sm transition-all duration-300;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+  }
+  
+  .input:focus {
+    --tw-ring-color: rgba(45, 114, 143, 0.5);
+    border-color: rgba(45, 114, 143, 0.6);
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 114, 143, 0.2);
   }
   
   .input-error {
-    @apply border-red-300 focus:ring-red-500 focus:border-red-500;
+    @apply border-2 focus:ring-2;
+    border-color: rgba(171, 52, 40, 0.5);
+    background-color: rgba(254, 242, 242, 0.8);
+  }
+  
+  .input-error:focus {
+    --tw-ring-color: rgba(171, 52, 40, 0.5);
+    border-color: rgba(171, 52, 40, 0.7);
   }
   
   .label {
@@ -54,35 +134,51 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply rounded-xl shadow-lg border-2 border-white/30 p-6 transition-all duration-300;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  .card:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
   
   .card-header {
-    @apply border-b border-gray-200 pb-4 mb-4;
+    @apply border-b-2 border-white/40 pb-4 mb-6;
   }
   
   .card-title {
-    @apply text-lg font-semibold text-gray-900;
+    @apply text-xl font-bold;
+    color: #2d728f;
   }
   
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border-2 border-white/30 transition-all duration-300;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   
   .badge-success {
-    @apply badge bg-green-100 text-green-800;
+    @apply badge text-green-800;
+    background: rgba(209, 250, 229, 0.7);
   }
   
   .badge-warning {
-    @apply badge bg-yellow-100 text-yellow-800;
+    @apply badge text-sandy-brown-800;
+    background: rgba(254, 235, 219, 0.7);
   }
   
   .badge-danger {
-    @apply badge bg-red-100 text-red-800;
+    @apply badge text-fire-brick-800;
+    background: rgba(254, 226, 226, 0.7);
   }
   
   .badge-info {
-    @apply badge bg-blue-100 text-blue-800;
+    @apply badge text-blue-munsell-800;
+    background: rgba(219, 234, 254, 0.7);
   }
 }
 
@@ -90,4 +186,102 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #2d728f 0%, #3b8ea5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Date Picker Z-Index Fix - Must be at body level, not scoped */
+/* Target all possible date picker menu classes - ensure high z-index regardless of position */
+.dp__menu,
+.dp__calendar_wrap,
+.dp__calendar,
+.dp__outer_menu,
+.dp__menu_transitioned,
+.dp__menu_readonly,
+.dp__menu_disabled,
+[class*="dp__menu"],
+[class^="dp__menu"] {
+  z-index: 10000 !important;
+}
+
+/* Also target any nested menu containers */
+.dp__outer_menu .dp__menu,
+.dp__outer_menu .dp__calendar_wrap {
+  z-index: 10001 !important;
+}
+
+/* Ensure date picker works whether positioned above or below */
+.dp__menu[style*="bottom"],
+.dp__menu[style*="top"] {
+  z-index: 10000 !important;
+}
+
+.dp__overlay {
+  z-index: 9999 !important;
+}
+
+.dp__menu {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 12px !important;
+}
+
+.dp__cell_inner {
+  transition: all 0.2s ease !important;
+}
+
+.dp__cell_inner:hover {
+  transform: scale(1.05) !important;
+}
+
+/* Ensure date picker input wrapper doesn't create stacking context issues */
+.dp__input_wrap {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure date picker portal/teleport container has proper z-index when rendered at body level */
+body > .dp__menu,
+body > .dp__outer_menu,
+body > [class*="dp__menu"],
+#app > .dp__menu,
+#app > .dp__outer_menu {
+  z-index: 10000 !important;
+}
+
+/* Global fix: Ensure date picker always appears above everything */
+/* This targets the date picker regardless of where it's positioned in the DOM */
+* {
+  /* Prevent any element from trapping the date picker */
+}
+
+/* Specifically ensure cards and glass effects don't create stacking contexts that trap date picker */
+.card,
+.glass-effect {
+  /* These already have backdrop-filter which creates stacking context */
+  /* But we ensure date picker escapes by using teleport */
+}
+
+/* Additional fix: Target date picker when it's inside any container */
+.card .dp__menu,
+.glass-effect .dp__menu,
+.card .dp__outer_menu,
+.glass-effect .dp__outer_menu {
+  z-index: 10000 !important;
+  position: fixed !important;
 }
