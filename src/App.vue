@@ -16,7 +16,7 @@
               'px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2',
               mode === 'planning'
                 ? 'bg-white/85 border-white/50 shadow-lg text-primary-600'
-                : 'bg-white/75 border-white/30 shadow-md text-gray-700 hover:bg-white/85'
+                : 'bg-white/50 border-white/20 shadow-sm text-gray-500 opacity-60 hover:bg-white/60 hover:opacity-80'
             ]"
             style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);"
           >
@@ -28,7 +28,7 @@
               'px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2',
               mode === 'inside'
                 ? 'bg-white/85 border-white/50 shadow-lg text-primary-600'
-                : 'bg-white/75 border-white/30 shadow-md text-gray-700 hover:bg-white/85'
+                : 'bg-white/50 border-white/20 shadow-sm text-gray-500 opacity-60 hover:bg-white/60 hover:opacity-80'
             ]"
             style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);"
           >
