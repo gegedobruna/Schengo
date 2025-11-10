@@ -293,6 +293,7 @@
   .gradient-text {
     @apply bg-clip-text text-transparent;
     background: linear-gradient(135deg, #2d728f 0%, #3b8ea5 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -434,13 +435,10 @@ body > [class*="dp__menu"],
 
 /* Global fix: Ensure date picker always appears above everything */
 /* This targets the date picker regardless of where it's positioned in the DOM */
-* {
-}
+/* Global styles handled by Tailwind */
 
 /* Specifically ensure cards and glass effects don't create stacking contexts that trap date picker */
-.card,
-.glass-effect {
-}
+/* Card and glass-effect styles handled by component classes */
 
 /* Additional fix: Target date picker when it's inside any container */
 .card .dp__menu,
