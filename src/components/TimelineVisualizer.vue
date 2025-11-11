@@ -243,7 +243,7 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 
 <style scoped>
 .timeline-container {
-  @apply rounded-xl shadow-2xl p-8 border-2 border-white/30 transition-all duration-300;
+  @apply rounded-xl shadow-2xl p-4 md:p-8 border-2 border-white/30 transition-all duration-300;
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -260,21 +260,21 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .timeline-header {
-  @apply text-center pb-6 border-b-2 border-white/40;
+  @apply text-center pb-4 md:pb-6 border-b-2 border-white/40;
   color: #2d728f;
 }
 
 .timeline-title {
-  @apply text-2xl font-bold mb-2;
+  @apply text-lg md:text-2xl font-bold mb-2;
 }
 
 .timeline-subtitle {
-  @apply text-sm text-gray-600;
+  @apply text-xs md:text-sm text-gray-600;
 }
 
 .timeline-graph {
-  @apply flex rounded-lg p-4 transition-all duration-300;
-  min-height: 220px;
+  @apply flex rounded-lg p-2 md:p-4 transition-all duration-300;
+  min-height: 180px;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -282,14 +282,15 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .y-axis {
-  @apply flex flex-col justify-between py-4 pr-6;
-  min-width: 120px;
+  @apply flex flex-col justify-between py-2 md:py-4 pr-2 md:pr-6;
+  min-width: 80px;
   border-right: 2px solid #f3f4f6;
 }
 
 .y-label {
-  @apply text-sm font-semibold text-gray-700 px-3 py-2 rounded-lg transition-all duration-300;
-  height: 44px;
+  @apply text-xs md:text-sm font-semibold text-gray-700 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-all duration-300;
+  height: auto;
+  min-height: 36px;
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.7);
@@ -300,12 +301,13 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 
 .timeline-content {
   @apply flex-1 relative;
-  min-height: 220px;
+  min-height: 180px;
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow-x: auto;
 }
 
 .timeline-grid {
@@ -321,26 +323,34 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .grid-label {
-  @apply absolute -top-8 text-xs text-gray-600 font-medium;
+  @apply absolute -top-6 md:-top-8 text-[10px] md:text-xs text-gray-600 font-medium;
   transform: translateX(-50%);
   background: white;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 4px;
   border: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .grid-label {
+    padding: 2px 6px;
+  }
 }
 
 .timeline-row {
-  @apply relative h-14 mb-3;
+  @apply relative h-10 md:h-14 mb-2 md:mb-3;
 }
 
 .stay-bar {
-  @apply absolute h-10 rounded-lg shadow-md cursor-pointer transition-all duration-300;
+  @apply absolute h-8 md:h-10 rounded-lg shadow-md cursor-pointer transition-all duration-300;
   top: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid rgba(255, 255, 255, 0.3);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  min-width: 20px;
 }
 
 .stay-bar:hover {
@@ -373,7 +383,7 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .rolling-window-bar {
-  @apply absolute h-10 rounded-lg;
+  @apply absolute h-8 md:h-10 rounded-lg;
   top: 2px;
   border: 2px dashed #3b82f6;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
@@ -445,23 +455,35 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
 }
 
 .timeline-legend {
-  @apply flex flex-wrap gap-6 justify-center mt-8 pt-6 border-t-2 border-white/40;
+  @apply flex flex-wrap gap-3 md:gap-6 justify-center mt-4 md:mt-8 pt-4 md:pt-6 border-t-2 border-white/40;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;
-  padding: 20px;
+  padding: 12px;
+}
+
+@media (min-width: 768px) {
+  .timeline-legend {
+    padding: 20px;
+  }
 }
 
 .legend-item {
-  @apply flex items-center space-x-3 text-sm font-medium transition-all duration-300;
+  @apply flex items-center space-x-2 md:space-x-3 text-xs md:text-sm font-medium transition-all duration-300;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 20px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .legend-item {
+    padding: 8px 16px;
+  }
 }
 
 .legend-item:hover {
@@ -495,24 +517,33 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
   background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
 }
 
-/* Responsive design */
 @media (max-width: 768px) {
   .timeline-graph {
-    @apply flex-col;
+    @apply flex-row;
+    min-height: auto;
+    flex-direction: row;
   }
   
   .y-axis {
-    @apply flex-row justify-between py-2 pr-0 pb-2;
-    min-width: auto;
+    @apply flex-col justify-between py-2 pr-2 pb-2;
+    min-width: 60px;
+    border-right: 2px solid #f3f4f6;
+    border-bottom: none;
   }
   
   .y-label {
     @apply text-xs;
     height: auto;
+    min-height: 32px;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
   }
   
   .timeline-content {
     min-height: 150px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
   }
   
   .timeline-row {
@@ -525,6 +556,13 @@ const getDuration = (entry: Date | null, exit: Date | null): number => {
   
   .rolling-window-bar {
     @apply h-6;
+  }
+  
+  .stay-tooltip,
+  .window-tooltip {
+    font-size: 10px;
+    padding: 6px;
+    max-width: 150px;
   }
 }
 </style>

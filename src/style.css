@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
 .error-border {
   border: 2px solid #ef4444 !important;
   border-radius: 8px;
@@ -34,7 +49,16 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 border-2;
+    @apply inline-flex items-center justify-center px-4 py-2 md:px-5 md:py-2.5 text-sm font-semibold rounded-lg backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 border-2;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+  }
+  
+  @media (min-width: 768px) {
+    .btn {
+      min-height: auto;
+    }
   }
   
   .btn-primary {
@@ -106,6 +130,8 @@
     background: transparent !important;
     backdrop-filter: none;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   
   .btn-transparent:hover {
@@ -228,7 +254,7 @@
   }
   
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-xs md:text-sm font-medium text-gray-700 mb-1;
   }
   
   .error-message {
@@ -236,13 +262,27 @@
   }
   
   .card {
-    @apply rounded-xl shadow-lg border-2 border-white/30 p-6 transition-all duration-300;
+    @apply rounded-xl shadow-lg border-2 border-white/30 p-4 md:p-6 transition-all duration-300;
     background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     width: 100%;
-    min-width: 900px;
+    min-width: 0;
     box-sizing: border-box;
+    flex-shrink: 0;
+  }
+  
+  @media (min-width: 1024px) {
+    .card {
+      min-width: 900px;
+    }
+  }
+  
+  @media (max-width: 1023px) {
+    .card {
+      width: 100%;
+      max-width: 100%;
+    }
   }
   
   .card .text-red-500 {
@@ -252,11 +292,24 @@
   
   .card .dp__input_wrap {
     width: 100%;
-    min-width: 200px;
+    min-width: 0;
+  }
+  
+  @media (min-width: 768px) {
+    .card .dp__input_wrap {
+      min-width: 200px;
+    }
   }
   
   .card .dp__input {
     width: 100%;
+    font-size: 14px;
+  }
+  
+  @media (min-width: 768px) {
+    .card .dp__input {
+      font-size: 16px;
+    }
   }
   
   .card:hover {
@@ -266,11 +319,11 @@
   }
   
   .card-header {
-    @apply border-b-2 border-white/40 pb-4 mb-6;
+    @apply border-b-2 border-white/40 pb-3 md:pb-4 mb-4 md:mb-6;
   }
   
   .card-title {
-    @apply text-xl font-bold;
+    @apply text-lg md:text-xl font-bold;
     color: #2d728f;
   }
   

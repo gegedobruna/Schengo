@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen p-6 md:p-8 relative flex flex-col">
-    <!-- Language Toggle Button -->
+  <div class="min-h-screen p-3 md:p-6 lg:p-8 relative flex flex-col">
+      <!-- Language Toggle Button -->
     <button
       @click="setLanguage(language === 'en' ? 'sq' : 'en')"
-      class="fixed top-4 right-4 px-4 py-2 rounded-xl font-semibold transition-all duration-300 border-2 bg-white/75 border-white/30 shadow-md text-gray-700 hover:bg-white/85 z-50"
+      class="fixed top-2 right-2 md:top-4 md:right-4 px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all duration-300 border-2 bg-white/75 border-white/30 shadow-md text-gray-700 hover:bg-white/85 z-50"
       style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);"
       :title="language === 'en' ? 'Switch to Albanian' : 'Kalo në Anglisht'"
     >
@@ -32,7 +32,7 @@
       </div>
     </div>
     
-    <div class="max-w-7xl mx-auto space-y-8 flex-1">
+    <div class="max-w-7xl mx-auto space-y-6 md:space-y-8 flex-1 px-2 md:px-0">
       <div class="text-center mb-4">
         <img 
           :src="logoImage" 
@@ -41,11 +41,11 @@
         />
         
         <!-- Mode Toggle Buttons -->
-        <div class="flex justify-center gap-4">
+        <div class="flex justify-center gap-2 md:gap-4 flex-wrap">
           <button
             @click="mode = 'planning'"
             :class="[
-              'px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2',
+              'px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all duration-300 border-2',
               mode === 'planning'
                 ? 'bg-white/85 border-white/50 shadow-lg text-primary-600'
                 : 'bg-white/50 border-white/20 shadow-sm text-gray-500 opacity-60 hover:bg-white/60 hover:opacity-80'
@@ -57,7 +57,7 @@
           <button
             @click="mode = 'inside'"
             :class="[
-              'px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2',
+              'px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all duration-300 border-2',
               mode === 'inside'
                 ? 'bg-white/85 border-white/50 shadow-lg text-primary-600'
                 : 'bg-white/50 border-white/20 shadow-sm text-gray-500 opacity-60 hover:bg-white/60 hover:opacity-80'
@@ -72,14 +72,14 @@
       <!-- Planning Mode -->
       <div v-if="mode === 'planning'">
       <!-- Past Entries -->
-      <div class="card">
+      <div class="card" style="min-height: 200px;">
         <div class="card-header">
           <h2 class="card-title">{{ t('pastSchengenEntries') }}</h2>
         </div>
         
-        <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 items-end">
-          <div class="flex-1 min-w-0">
-            <label class="label">{{ t('entryDate') }}</label>
+        <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6 items-end">
+          <div class="flex-1 min-w-0 w-full">
+            <label class="label text-xs md:text-sm">{{ t('entryDate') }}</label>
             <VueDatePicker 
               v-model="entry.entry" 
               :format="'dd MMMM yyyy'"
@@ -93,8 +93,8 @@
             />
             <p v-if="pastEntryErrors[index]?.entry" class="text-red-500 text-sm mt-1">{{ pastEntryErrors[index].entry }}</p>
           </div>
-          <div class="flex-1 min-w-0">
-            <label class="label">{{ t('exitDate') }}</label>
+          <div class="flex-1 min-w-0 w-full">
+            <label class="label text-xs md:text-sm">{{ t('exitDate') }}</label>
             <VueDatePicker 
               v-model="entry.exit" 
               :format="'dd MMMM yyyy'"
@@ -108,10 +108,10 @@
             />
             <p v-if="pastEntryErrors[index]?.exit" class="text-red-500 text-sm mt-1">{{ pastEntryErrors[index].exit }}</p>
           </div>
-          <div class="flex items-center">
+          <div class="flex items-center justify-center md:justify-start">
             <button 
               @click="removeEntry(index)" 
-              class="btn-transparent-danger w-10 h-10 flex items-center justify-center p-0"
+              class="btn-transparent-danger w-10 h-10 md:w-10 md:h-10 flex items-center justify-center p-0 touch-manipulation"
               :disabled="pastEntries.length <= 1"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -133,14 +133,14 @@
       </div>
       
       <!-- Trip Planning -->
-      <div class="card mt-8">
+      <div class="card mt-4 md:mt-8" style="min-height: 200px;">
         <div class="card-header">
           <h2 class="card-title">{{ t('tripPlanning') }}</h2>
         </div>
         
-        <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="grid md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
           <div class="min-w-0">
-            <label class="label">{{ t('plannedEntryDate') }}</label>
+            <label class="label text-xs md:text-sm">{{ t('plannedEntryDate') }}</label>
             <VueDatePicker 
               v-model="plannedEntry" 
               :format="'dd MMMM yyyy'"
@@ -155,7 +155,7 @@
             <p v-if="plannedTripErrors.entry" class="text-red-500 text-sm mt-1">{{ plannedTripErrors.entry }}</p>
           </div>
           <div class="min-w-0">
-            <label class="label">{{ t('plannedExitDate') }}</label>
+            <label class="label text-xs md:text-sm">{{ t('plannedExitDate') }}</label>
             <VueDatePicker 
               v-model="plannedExit" 
               :format="'dd MMMM yyyy'"
@@ -183,27 +183,27 @@
       </div>
       
       <!-- Results -->
-      <div v-if="results" class="card mt-8">
+      <div v-if="results" class="card mt-4 md:mt-8" style="min-height: 200px;">
         <div class="card-header">
           <h2 class="card-title">{{ t('results') }}</h2>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div class="p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
-            <h3 class="font-semibold text-gray-700 mb-2">{{ t('daysLeftInEU') }}</h3>
-            <p class="text-4xl font-bold" :class="results.daysLeft > 0 ? 'text-green-600' : 'text-fire-brick-600'">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
+          <div class="p-4 md:p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
+            <h3 class="font-semibold text-gray-700 mb-2 text-sm md:text-base">{{ t('daysLeftInEU') }}</h3>
+            <p class="text-3xl md:text-4xl font-bold" :class="results.daysLeft > 0 ? 'text-green-600' : 'text-fire-brick-600'">
               {{ results.daysLeft }}
             </p>
           </div>
-          <div class="p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
-            <h3 class="font-semibold text-gray-700 mb-2">{{ t('tripStatus') }}</h3>
-            <p class="text-4xl font-bold" :class="results.tripValid ? 'text-green-600' : 'text-fire-brick-600'">
+          <div class="p-4 md:p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
+            <h3 class="font-semibold text-gray-700 mb-2 text-sm md:text-base">{{ t('tripStatus') }}</h3>
+            <p class="text-3xl md:text-4xl font-bold" :class="results.tripValid ? 'text-green-600' : 'text-fire-brick-600'">
               {{ results.tripValid ? t('valid') : t('invalid') }}
             </p>
           </div>
         </div>
         
-        <div class="mt-6 p-4 glass-effect rounded-xl space-y-2 text-sm transition-all duration-300 hover:bg-white/80">
+        <div class="mt-4 md:mt-6 p-3 md:p-4 glass-effect rounded-xl space-y-2 text-xs md:text-sm transition-all duration-300 hover:bg-white/80">
           <p class="text-gray-700"><span class="font-semibold text-cerulean-600">{{ t('daysUsedOnEntry') }}</span> {{ results.daysUsedOnEntry }}</p>
           <p class="text-gray-700"><span class="font-semibold text-blue-munsell-600">{{ t('daysRemainingOnEntry') }}</span> {{ results.daysRemainingOnEntry }}</p>
           <p class="text-gray-700"><span class="font-semibold text-gray-800">{{ t('latestSafeExit') }}</span> {{ formatDate(new Date(results.latestSafeExit), language) }}</p>
@@ -217,7 +217,7 @@
       </div>
       
       <!-- Timeline Visualizer -->
-      <div v-if="results" class="mt-8">
+      <div v-if="results" class="mt-4 md:mt-8">
         <TimelineVisualizer 
           :pastStays="validPastStays"
           :plannedTrip="plannedTripData"
@@ -229,14 +229,14 @@
       <!-- Inside Mode -->
       <div v-if="mode === 'inside'">
         <!-- Past Entries for Inside Mode -->
-        <div class="card">
+        <div class="card" style="min-height: 200px;">
           <div class="card-header">
             <h2 class="card-title">{{ t('pastSchengenEntries') }}</h2>
           </div>
           
-          <div v-for="(entry, index) in insidePastEntries" :key="index" class="flex flex-col md:flex-row gap-4 mb-6 items-end">
-            <div class="flex-1 min-w-0">
-              <label class="label">{{ t('entryDate') }}</label>
+          <div v-for="(entry, index) in insidePastEntries" :key="index" class="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6 items-end">
+            <div class="flex-1 min-w-0 w-full">
+              <label class="label text-xs md:text-sm">{{ t('entryDate') }}</label>
               <VueDatePicker 
                 v-model="entry.entry" 
                 :format="'dd MMMM yyyy'"
@@ -250,8 +250,8 @@
               />
               <p v-if="insidePastEntryErrors[index]?.entry" class="text-red-500 text-sm mt-1">{{ insidePastEntryErrors[index].entry }}</p>
             </div>
-            <div class="flex-1 min-w-0">
-              <label class="label">{{ t('exitDate') }}</label>
+            <div class="flex-1 min-w-0 w-full">
+              <label class="label text-xs md:text-sm">{{ t('exitDate') }}</label>
               <VueDatePicker 
                 v-model="entry.exit" 
                 :format="'dd MMMM yyyy'"
@@ -265,10 +265,10 @@
               />
               <p v-if="insidePastEntryErrors[index]?.exit" class="text-red-500 text-sm mt-1">{{ insidePastEntryErrors[index].exit }}</p>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center justify-center md:justify-start">
               <button 
                 @click="removeInsideEntry(index)" 
-                class="btn-transparent-danger w-10 h-10 flex items-center justify-center p-0"
+                class="btn-transparent-danger w-10 h-10 flex items-center justify-center p-0 touch-manipulation"
                 :disabled="insidePastEntries.length <= 1"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -290,14 +290,14 @@
         </div>
         
         <!-- Last Entry Date -->
-        <div class="card mt-8">
+        <div class="card mt-4 md:mt-8" style="min-height: 200px;">
           <div class="card-header">
             <h2 class="card-title">{{ t('currentStay') }}</h2>
           </div>
           
-          <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="grid md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
             <div class="min-w-0">
-              <label class="label">{{ t('lastEntryDate') }}</label>
+              <label class="label text-xs md:text-sm">{{ t('lastEntryDate') }}</label>
               <VueDatePicker 
                 v-model="lastEntryDate" 
                 :format="'dd MMMM yyyy'"
@@ -325,27 +325,27 @@
       </div>
       
       <!-- Inside Mode Results -->
-      <div v-if="insideResults" class="card mt-8">
+      <div v-if="insideResults" class="card mt-4 md:mt-8" style="min-height: 200px;">
         <div class="card-header">
           <h2 class="card-title">{{ t('results') }}</h2>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div class="p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
-            <h3 class="font-semibold text-gray-700 mb-2">{{ t('daysLeftInEU') }}</h3>
-              <p class="text-4xl font-bold" :class="insideResults.daysLeft > 0 ? 'text-green-600' : 'text-fire-brick-600'">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
+          <div class="p-4 md:p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
+            <h3 class="font-semibold text-gray-700 mb-2 text-sm md:text-base">{{ t('daysLeftInEU') }}</h3>
+              <p class="text-3xl md:text-4xl font-bold" :class="insideResults.daysLeft > 0 ? 'text-green-600' : 'text-fire-brick-600'">
                 {{ insideResults.daysLeft }}
               </p>
             </div>
-          <div class="p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
-            <h3 class="font-semibold text-gray-700 mb-2">{{ t('daysUsed') }}</h3>
-            <p class="text-4xl font-bold text-gray-700">
+          <div class="p-4 md:p-6 glass-effect rounded-xl transition-all duration-300 hover:bg-white/85 hover:scale-105">
+            <h3 class="font-semibold text-gray-700 mb-2 text-sm md:text-base">{{ t('daysUsed') }}</h3>
+            <p class="text-3xl md:text-4xl font-bold text-gray-700">
               {{ insideResults.daysUsed }}
             </p>
           </div>
         </div>
         
-        <div class="mt-6 p-4 glass-effect rounded-xl space-y-2 text-sm transition-all duration-300 hover:bg-white/80">
+        <div class="mt-4 md:mt-6 p-3 md:p-4 glass-effect rounded-xl space-y-2 text-xs md:text-sm transition-all duration-300 hover:bg-white/80">
           <p class="text-gray-700"><span class="font-semibold text-cerulean-600">{{ t('latestSafeExit') }}</span> {{ formatDate(new Date(insideResults.latestSafeExit), language) }}</p>
         </div>
         </div>
@@ -353,8 +353,8 @@
     </div>
     
     <!-- Footer -->
-    <footer class="mt-12 pt-8 border-t border-white/20 text-center">
-      <p class="text-gray-600 text-sm">
+    <footer class="mt-6 md:mt-12 pt-4 md:pt-8 border-t border-white/20 text-center">
+      <p class="text-gray-600 text-xs md:text-sm px-4">
         {{ t('footerText') }}
       </p>
     </footer>
