@@ -15,14 +15,9 @@
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
-    "@vee-validate/zod": "^4.12.0",
     "@vuepic/vue-datepicker": "^11.0.3",
-    "luxon": "^3.4.4",
-    "pinia": "^2.1.7",
-    "vee-validate": "^4.12.0",
-    "vue": "^3.4.0",
-    "vue-router": "^4.2.5",
-    "zod": "^3.22.4"
+    "date-fns": "^3.0.0",
+    "vue": "^3.4.0"
   },
   "devDependencies": {
     "@types/luxon": "^3.3.0",

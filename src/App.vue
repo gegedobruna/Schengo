@@ -1,11 +1,12 @@
 <template>
-  <div class="min-h-screen p-3 md:p-6 lg:p-8 relative flex flex-col">
+  <div class="min-h-screen p-3 md:p-6 lg:p-8 relative flex flex-col" style="z-index: 1; position: relative;">
       <!-- Language Toggle Button -->
     <button
       @click="setLanguage(language === 'en' ? 'sq' : 'en')"
       class="fixed top-2 right-2 md:top-4 md:right-4 px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all duration-300 border-2 bg-white/75 border-white/30 shadow-md text-gray-700 hover:bg-white/85 z-50"
       style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);"
       :title="language === 'en' ? 'Switch to Albanian' : 'Kalo në Anglisht'"
+      :aria-label="language === 'en' ? 'Switch to Albanian' : 'Kalo në Anglisht'"
     >
       {{ language === 'en' ? 'SQ' : 'EN' }}
     </button>
@@ -32,12 +33,27 @@
       </div>
     </div>
     
+    <!-- Error Notification -->
+    <div v-if="showError" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] max-w-md w-full mx-4">
+      <div class="bg-red-500 text-white px-6 py-4 rounded-lg shadow-xl flex items-center justify-between">
+        <p class="text-sm font-medium">{{ showError }}</p>
+        <button @click="showError = ''" class="ml-4 text-white hover:text-red-100" aria-label="Close error">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    
     <div class="max-w-7xl mx-auto space-y-6 md:space-y-8 flex-1 px-2 md:px-0">
       <div class="text-center mb-4">
         <img 
           :src="logoImage" 
           alt="Schengen Planner" 
           class="mx-auto max-w-[200px] md:max-w-[250px] h-auto drop-shadow-lg brightness-0 invert mb-4"
+          loading="lazy"
+          width="250"
+          height="auto"
         />
         
         <!-- Mode Toggle Buttons -->
@@ -77,7 +93,7 @@
           <h2 class="card-title">{{ t('pastSchengenEntries') }}</h2>
         </div>
         
-        <div v-for="(entry, index) in pastEntries" :key="index" class="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6 items-end">
+        <div v-for="(entry, index) in pastEntries" :key="entry.id || index" class="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6 items-end">
           <div class="flex-1 min-w-0 w-full">
             <label class="label text-xs md:text-sm">{{ t('entryDate') }}</label>
             <VueDatePicker 
@@ -234,7 +250,7 @@
             <h2 class="card-title">{{ t('pastSchengenEntries') }}</h2>
           </div>
           
-          <div v-for="(entry, index) in insidePastEntries" :key="index" class="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6 items-end">
+          <div v-for="(entry, index) in insidePastEntries" :key="entry.id || index" class="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6 items-end">
             <div class="flex-1 min-w-0 w-full">
               <label class="label text-xs md:text-sm">{{ t('entryDate') }}</label>
               <VueDatePicker 
@@ -353,8 +369,8 @@
     </div>
     
     <!-- Footer -->
-    <footer class="mt-6 md:mt-12 pt-4 md:pt-8 border-t border-white/20 text-center">
-      <p class="text-gray-600 text-xs md:text-sm px-4">
+    <footer class="mt-6 md:mt-12 pt-4 md:pt-8 border-t border-white/20 text-center relative" style="z-index: 2;">
+      <p class="text-white text-xs md:text-sm px-4">
         {{ t('footerText') }}
       </p>
     </footer>
@@ -393,16 +409,20 @@ const dismissWelcome = () => {
 }
 
 const pastEntries = ref<Stay[]>([
-  { entry: null, exit: null }
+  { entry: null, exit: null, id: Date.now().toString() }
 ])
+
+let entryIdCounter = Date.now() + 1
 
 const plannedEntry = ref<Date | null>(null)
 const plannedExit = ref<Date | null>(null)
 const results = ref<CalculationResult | null>(null)
 
 const insidePastEntries = ref<Stay[]>([
-  { entry: null, exit: null }
+  { entry: null, exit: null, id: Date.now().toString() }
 ])
+
+let insideEntryIdCounter = Date.now() + 1
 
 const lastEntryDate = ref<Date | null>(null)
 const insideResults = ref<{
@@ -412,7 +432,7 @@ const insideResults = ref<{
 } | null>(null)
 
 const addEntry = () => {
-  pastEntries.value.push({ entry: null, exit: null })
+  pastEntries.value.push({ entry: null, exit: null, id: (entryIdCounter++).toString() })
 }
 
 const removeEntry = (index: number) => {
@@ -422,7 +442,7 @@ const removeEntry = (index: number) => {
 }
 
 const addInsideEntry = () => {
-  insidePastEntries.value.push({ entry: null, exit: null })
+  insidePastEntries.value.push({ entry: null, exit: null, id: (insideEntryIdCounter++).toString() })
 }
 
 const removeInsideEntry = (index: number) => {
@@ -543,24 +563,29 @@ const validateLastEntryDate = () => {
   lastEntryErrors.value = errors[0] || ''
 }
 
+const showError = ref<string>('')
+
 const calculate = () => {
   validateAllPastEntries(true)
   const hasPastErrors = Object.keys(pastEntryErrors.value).length > 0
   if (hasPastErrors) {
     const firstError = Object.values(pastEntryErrors.value)[0]
-    alert(firstError.entry || firstError.exit || t('bothDatesRequired'))
+    showError.value = firstError.entry || firstError.exit || t('bothDatesRequired')
+    setTimeout(() => { showError.value = '' }, 5000)
     return
   }
   
   validatePlannedTripDates()
   if (plannedTripErrors.value.entry || plannedTripErrors.value.exit) {
-    alert(plannedTripErrors.value.entry || plannedTripErrors.value.exit || t('pleaseEnterPlannedEntry'))
+    showError.value = plannedTripErrors.value.entry || plannedTripErrors.value.exit || t('pleaseEnterPlannedEntry')
+    setTimeout(() => { showError.value = '' }, 5000)
     return
   }
 
   const validStays = pastEntries.value.filter((stay: Stay) => stay.entry !== null && stay.exit !== null) as Stay[]
 
   results.value = calculateSchengenStatus(validStays, plannedEntry.value, plannedExit.value)
+  showError.value = ''
 }
 
 const validPastStays = computed(() => {
@@ -616,13 +641,15 @@ const calculateInside = () => {
   const hasPastErrors = Object.keys(insidePastEntryErrors.value).length > 0
   if (hasPastErrors) {
     const firstError = Object.values(insidePastEntryErrors.value)[0]
-    alert(firstError.entry || firstError.exit || t('bothDatesRequired'))
+    showError.value = firstError.entry || firstError.exit || t('bothDatesRequired')
+    setTimeout(() => { showError.value = '' }, 5000)
     return
   }
   
   validateLastEntryDate()
   if (lastEntryErrors.value) {
-    alert(lastEntryErrors.value)
+    showError.value = lastEntryErrors.value
+    setTimeout(() => { showError.value = '' }, 5000)
     return
   }
 

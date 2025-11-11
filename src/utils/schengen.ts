@@ -1,6 +1,7 @@
 export interface Stay {
   entry: Date | null
   exit: Date | null
+  id?: string
 }
 
 export interface CalculationResult {
@@ -113,6 +114,8 @@ function mergeStays(stays: Stay[]): Stay[] {
  * Finds the latest safe exit date by simulating day-by-day forward from entry.
  * Tests each day to see if staying until that day would exceed the 90-day limit.
  * Returns the last day before the limit would be exceeded, or entry + 89 days if full 90 days are available.
+ * 
+ * IMPORTANT: This function includes the hypothetical stay from entry to testDate when calculating days used.
  */
 function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
   const mergedStays = mergeStays(stays)
@@ -123,12 +126,23 @@ function calculateLatestSafeExit(stays: Stay[], entryDate: Date): string {
     testDate.setDate(testDate.getDate() + day)
     testDate.setHours(0, 0, 0, 0)
     
-    const daysUsed = calculateDaysUsed(mergedStays, testDate)
+    // Include the hypothetical stay from entry to testDate when calculating days used
+    const staysWithHypothetical = [
+      ...mergedStays,
+      { entry: normalizedEntry, exit: testDate }
+    ]
     
-    if (daysUsed >= 90) {
+    const daysUsed = calculateDaysUsed(staysWithHypothetical, testDate)
+    
+    if (daysUsed > 90) {
       // This day would exceed the limit, so the previous day was the last safe day
-      testDate.setDate(testDate.getDate() - 1)
-      return toISODate(testDate)
+      if (day === 0) {
+        // Can't even stay one day
+        return toISODate(normalizedEntry)
+      }
+      const lastSafeDate = new Date(normalizedEntry)
+      lastSafeDate.setDate(lastSafeDate.getDate() + day - 1)
+      return toISODate(lastSafeDate)
     }
   }
   
