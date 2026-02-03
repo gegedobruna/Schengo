@@ -4,15 +4,15 @@ A Vue 3 + TypeScript application for planning and tracking Schengen area stays w
 
 ## Features
 
-- 🎯 **Dual Mode System**: 
+- **Dual Mode System**: 
   - **Planning Mode**: Calculate remaining days for a future trip
   - **Inside Mode**: Track your current stay if you're already in the Schengen zone
-- 📅 **Stay Tracking**: Record and manage your past Schengen area visits
-- ⏰ **90/180 Rule Calculator**: Automatic calculation of remaining days within any 180-day rolling period
-- ✅ **Compliance Check**: Real-time validation to prevent overstaying with error messages
-- 🌍 **Bilingual Support**: Available in English and Albanian
-- 📱 **Responsive Design**: Works on desktop and mobile devices
-- 🎨 **Modern UI**: Glassmorphic design with smooth animations
+- **Stay Tracking**: Record and manage your past Schengen area visits
+- **90/180 Rule Calculator**: Automatic calculation of remaining days within any 180-day rolling period
+- **Compliance Check**: Real-time validation to prevent overstaying with error messages
+- **Bilingual Support**: Available in English and Albanian
+- **Responsive Design**: Works on desktop and mobile devices
+- **Modern UI**: Glassmorphic design with smooth animations
 
 ## Tech Stack
 
